@@ -14,6 +14,7 @@ SignalTable *Program::gStable = new SignalTable;
 Program::Program(List<Decl*> *d) {
     Assert(d != NULL);
     (decls=d)->SetParentAll(this);
+    cg = new CodeGenerator();
 }
 
 void Program::Check() {
@@ -27,7 +28,7 @@ void Program::Check() {
     int n = decls->NumElements();
     for (int i = 0 ; i < n ; ++i) {
         gStable->InsertDecl(decls->Nth(i));
-    }
+     }
     for (int i = 0 ; i < n; ++i) {
         decls->Nth(i)->sTable->AddParent(gStable);
         decls->Nth(i)->creatStable();
@@ -35,7 +36,27 @@ void Program::Check() {
 }
 
 void Program::Emit() {
-    
+    int globalOffset = CodeGenerator::OffsetToFirstGlobal;
+
+    int n = decls->NumElements();
+
+    for (int i = 0 ; i < n ; ++i) {
+        Decl * decl = decls->Nth(i);
+        if (decl->GetDeclType() == __varDecl) {
+            Location *gLoc = new Location(gpRelative,globalOffset,decl->GetName());
+            VarDecl *vDecl = dynamic_cast<VarDecl*>(decl);
+            vDecl->SetMemLoc(gLoc);
+            globalOffset += vDecl->GetMemBytes();
+        }
+    }
+
+    for (int i = 0 ; i < n ; ++i) {
+        decls->Nth(i)->PreEmit();
+    }
+
+    for (int i = 0 ; i < n ; ++i) 
+        decls->Nth(i)->Emit(cg);
+    cg->DoFinalCodeGen();
 }
 
 StmtBlock::StmtBlock(List<VarDecl*> *d, List<Stmt*> *s) {

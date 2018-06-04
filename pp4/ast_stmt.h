@@ -25,6 +25,7 @@ class Program : public Node
 {
   protected:
      List<Decl*> *decls;
+     CodeGenerator * cg;
      
   public:
      Program(List<Decl*> *declList);
