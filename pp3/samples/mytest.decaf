@@ -1,0 +1,4 @@
+int main(){
+	g.h;
+	return 0;
+}
