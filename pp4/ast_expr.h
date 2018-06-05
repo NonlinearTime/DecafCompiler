@@ -65,7 +65,7 @@ class IntConstant : public Expr
     bool check() {return true;}
     int GetExprType() {return intConstant;}
     const char *GetExprName() {return "int";}
-    Expr* resExpr() {printf("int：fuck！！\n");return this;}
+    Expr* resExpr() {return this;}
     Type* GetResType() {return new Type(GetExprName(),GetExprType());}
     
     Location* Emit(CodeGenerator *cg) {return cg->GenLoadConstant(value);}
@@ -292,6 +292,12 @@ class PostfixExpr : public CompoundExpr
 
     Location* Emit(CodeGenerator *cg);
     int GetMemBytes();
+
+  private:
+    Location* EmitMinus(CodeGenerator *cg);
+    int GetMemBytesMinus();
+    Location* EmitPlus(CodeGenerator * cg);
+    int GetMemBytesPlus();
 };
 
 class LValue : public Expr 

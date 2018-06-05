@@ -87,11 +87,32 @@ bool StmtBlock::check() {
 }
 
 Location* StmtBlock::Emit(CodeGenerator* cg) {
+    int n = decls->NumElements();
+    for (int i = 0 ; i < n ; ++i) {
+        VarDecl * vDecl = dynamic_cast<VarDecl*> (decls->Nth(i));
+        if (vDecl != NULL) {
+            Location * localLoc = cg->GenLocalVar(vDecl->GetName(),vDecl->GetMemBytes());
+            vDecl->SetMemLoc(localLoc);
+        }
+    }
+    for (int i = 0 ; i < n ; ++i) 
+        decls->Nth(i)->Emit(cg);
+    for (int i = 0 , n = stmts->NumElements() ;i < n;++i) 
+        stmts->Nth(i)->Emit(cg);
     return NULL;
 }
 
 int StmtBlock::GetMemBytes() {
-    return 0;
+    int bytes = 0;
+    int n = decls->NumElements();
+    for (int i = 0 ;  i < n  ; ++i) {
+        bytes += decls->Nth(i)->GetMemBytes();
+    }
+    n = stmts->NumElements();
+    for (int i = 0 ; i < n ; ++i) {
+        bytes += stmts->Nth(i)->GetMemBytes();
+    }
+    return bytes;
 }
 
 ConditionalStmt::ConditionalStmt(Expr *t, Stmt *b) { 
@@ -313,6 +334,8 @@ bool ReturnStmt::check() {
 }  
 
 Location* ReturnStmt::Emit(CodeGenerator * cg) {
+    Location * loc = expr->Emit(cg);
+    cg->GenReturn(loc);
     return NULL;
 }
 

@@ -181,24 +181,15 @@ bool SignalTable::check(const char * key) {
 }
 
 st_entry * SignalTable::find(const char * key) {
-    // printf("%p\n",parents);
     int n = parents->NumElements();
     st_entry * ste = NULL;
     for (int i = 0 ; i < n; ++i) {
-        // printf("fuck! %d\n", n);
         ste = parents->Nth(i)->Lookup(key);
         if (ste != NULL) {
-            // printf("%s\n",key);
             return ste;
         }
-        // printf("fuck!\n");
         ste = parents->Nth(i)->find(key);
-        // printf("%p\n",ste);
-        // printf("fuck!\n");
-        // printf("%s\n",key);
     }
-    // printf("fuck!\n");
-    // printf("%p\n",parents);
     return ste;
 }
 

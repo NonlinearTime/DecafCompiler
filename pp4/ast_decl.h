@@ -83,6 +83,7 @@ class VarDecl : public Decl
     Location* Emit(CodeGenerator * cg) {return NULL;}
 
     void SetMemLoc(Location * loc) {this->loc = loc;}
+    Location* GetMemLoc() {return loc;}
 
     int GetMemBytes();
 

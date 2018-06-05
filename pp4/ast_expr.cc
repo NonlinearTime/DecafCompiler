@@ -88,12 +88,10 @@ Type* CompoundExpr::GetResType() {
             FieldAccess *fA = dynamic_cast<FieldAccess*>(right);
             NamedType* nT = dynamic_cast<NamedType *> (rType);
             if (fA != NULL) {
-                // printf("fuck!\n");
                 ReportError::IdentifierNotDeclared(fA->field,LookingForVariable);
                 return Type::errorType;
             }
         }
-        // printf("%s\n",rType->GetTypeName());
         if (lType->EqualsTo(rType)) {
             return lType;
         } else {
@@ -104,32 +102,17 @@ Type* CompoundExpr::GetResType() {
     return Type::errorType;
 }
 
-/* Expr * CompoundExpr::resExpr() {
-    Expr* lfExpr = left->resExpr();
-    Expr* rghExpr  = right->resExpr();
-    char *leftType, *tghEype;
-    
-    if (lfExpr->GetExprType() != rghExpr->GetExprType()) {
-        printf("error: %s %s %s.\n",lfExpr->GetExprName(), op->GetOperation(), rghExpr->GetExprName());
-    } else {
-        return lfExpr;
-    }
-} */
-
 Expr * ArithmeticExpr::resExpr() {
     Expr* lfExpr = NULL;
     Expr* rghExpr =NULL;
-    // printf("fuck!\n");
     if (left != NULL) lfExpr = left->resExpr();
     if (right != NULL) rghExpr = right->resExpr();
     char *leftType, *tghEype;
     
-    // printf("%p %p\n",lfExpr,rghExpr);
     if (lfExpr->GetExprType() != rghExpr->GetExprType()) {
         printf("error: %s %s %s.\n",lfExpr->GetExprName(), op->GetOperation(), rghExpr->GetExprName());
         return NULL;
     } else {
-        // printf("fuck!\n");
         return lfExpr == NULL ? rghExpr : lfExpr;
     }
 }
@@ -145,19 +128,26 @@ int ArithmeticExpr::GetMemBytes() {
 }
 
 Location* ArithmeticExpr::EmitUnary(CodeGenerator *cg) {
-    return NULL;
+    Location* rLoc = right->Emit(cg);
+    Location* tZ = cg->GenLoadConstant(0);
+    Location* res = cg->GenBinaryOp(op->GetOperation(),tZ,rLoc);
+    return res;
 }
 
 Location* ArithmeticExpr::EmitBinary(CodeGenerator *cg) {
+    Location* lLoc = left->Emit(cg);
+    Location* rLoc = right->Emit(cg);
+
+    Location* res = cg->GenBinaryOp(op->GetOperation(),lLoc, rLoc);
     return NULL;
 }
 
 int ArithmeticExpr::GetMemBytesUnary() {
-    return 0;
+    return right->GetMemBytes() + 2 * CodeGenerator::VarSize;
 }
 
 int ArithmeticExpr::GetMemBytesBinary() {
-    return 0;
+    return left->GetMemBytes() + right->GetMemBytes() + CodeGenerator::VarSize;
 }
 
 void ArithmeticExpr::creatStable() {
@@ -197,27 +187,53 @@ Type* RelationalExpr::GetResType() {
 }
 
 Location* RelationalExpr::Emit(CodeGenerator *cg) {
+    if (strcmp(op->GetOperation(), "<") == 0) {
+        return EmitLess(cg,left,right);
+    } else if (strcmp(op->GetOperation(), "<=") == 0) {
+        return EmitLessEqual(cg,left, right);
+    } else if (strcmp(op->GetOperation(), ">") == 0) {
+        return EmitLess(cg, right, left);
+    } else if (strcmp(op->GetOperation(), ">=") == 0) {
+        return EmitLessEqual(cg, right, left);
+    } else Assert(0);
     return NULL;
 }
 
 int RelationalExpr::GetMemBytes() {
+    const char * ops = op->GetOperation();
+    if (strcmp(ops,"<") == 0 || strcmp(ops,">") == 0)
+        return GetMemBytesLess(left, right);
+    else if (strcmp(ops,"<=") == 0 || strcmp(ops,">=") == 0)
+        return GetMemBytesLessEqual(left, right);
+    else Assert(0);
     return 0;
 }
 
 Location* RelationalExpr::EmitLess(CodeGenerator *cg, Expr *l, Expr *r) {
-    return NULL;
+    Location* lLoc = left->Emit(cg);
+    Location* rLoc = right->Emit(cg);
+    Location* res = cg->GenBinaryOp("<", lLoc, rLoc);
+    return res;
 }
 
 int RelationalExpr::GetMemBytesLess(Expr *l, Expr *r) {
-    return 0;
+    return left->GetMemBytes() + right->GetMemBytes() + CodeGenerator::VarSize;
 }
 
 Location* RelationalExpr::EmitLessEqual(CodeGenerator *cg, Expr *l, Expr *r) {
-    return NULL;
+    Location* lLoc = left->Emit(cg);
+    Location* rLoc = right->Emit(cg);
+
+    Location* less = cg->GenBinaryOp("<", lLoc, rLoc);
+    Location* equ = cg->GenBinaryOp("==", lLoc, rLoc);
+    
+    Location* res = cg->GenBinaryOp("||", less, equ);
+    
+    return res;
 }
 
 int RelationalExpr::GetMemBytesLessEqual(Expr *l, Expr *r) {
-    return 0;
+    return left->GetMemBytes() + right->GetMemBytes() + 3 * CodeGenerator::VarSize;
 }
 
 Expr * EqualityExpr::resExpr() {
@@ -248,27 +264,67 @@ Type* EqualityExpr::GetResType() {
 }
 
 Location* EqualityExpr::Emit(CodeGenerator *cg) {
+    if (strcmp(op->GetOperation(),"==") == 0) 
+        return EmitEqual(cg);
+    else if (strcmp(op->GetOperation(),"!=") == 0)
+        return EmitNotEqual(cg);
+    else Assert(0);
     return NULL;
 }
 
 int EqualityExpr::GetMemBytes() {
+    const char * ops = op->GetOperation();
+    if (strcmp(ops,"==") == 0) 
+        return GetMemBytesEqual();
+    else if (strcmp(ops, "!=") == 0)
+        return GetMemBytesNotEqual();
+    else Assert(0);
     return 0;
 }
 
 Location* EqualityExpr::EmitEqual(CodeGenerator *cg) {
-    return NULL;
+    Location* lLoc = left->Emit(cg);
+    Location* rLoc = right->Emit(cg);
+    Location* res;
+    if (left->GetResType()->EqualsTo(Type::stringType)){
+        //builtIn stringcmp
+    } else res = cg->GenBinaryOp("==",lLoc,rLoc);
+    return res;
 }
 
 int EqualityExpr::GetMemBytesEqual() {
-    return 0;
+    return left->GetMemBytes() + right->GetMemBytes() + CodeGenerator::VarSize ;
 }
 
 Location* EqualityExpr::EmitNotEqual(CodeGenerator *cg) {
-    return NULL;
+    //NewLabel returns const chars (label) for GenLabel 
+    //cg->GenBinaryOp only suport <, ==, ||, and &&
+    // so need to change != to an if-stmt
+    const char *eqLabel = cg->NewLabel();
+    const char *neqLabel = cg->NewLabel();
+
+    Location* lLoc = left->Emit(cg);
+    Location* rLoc = right->Emit(cg);
+    Location* zLoc = cg->GenLoadConstant(0);
+    Location* oLoc = cg->GenLoadConstant(1);
+    Location* tmp = cg->GenTempVar();
+    Location* res = NULL;
+    if (left->GetResType()->EqualsTo(Type::stringType)) {
+
+    } else tmp = cg->GenBinaryOp("==",lLoc, rLoc);
+
+    cg->GenIfZ(tmp,neqLabel);
+    cg->GenAssign(res, zLoc);
+    cg->GenGoto(eqLabel);
+    cg->GenLabel(neqLabel);
+    cg->GenAssign(res, oLoc);
+    cg->GenLabel(eqLabel);
+
+    return res;
 }
 
 int EqualityExpr::GetMemBytesNotEqual() {
-    return 0;
+    return left->GetMemBytes() + right->GetMemBytes() + 4 * CodeGenerator::VarSize;
 }
 
 void LogicalExpr::creatStable() {
@@ -294,7 +350,6 @@ Expr * LogicalExpr::resExpr() {
 }
 
 Type* LogicalExpr::GetResType() {
-    // printf("fuck!\n");
     Assert(right != NULL);
     Type *lType = NULL;
     if (left != NULL) lType = left->GetResType();
@@ -318,37 +373,76 @@ Type* LogicalExpr::GetResType() {
 }
 
 Location* LogicalExpr::Emit(CodeGenerator *cg) {
+    const char *ops = op->GetOperation();
+    if (strcmp(ops, "&&") == 0) 
+        return EmitAnd(cg);
+    else if (strcmp(ops, "||") == 0) 
+        return EmitOr(cg);
+    else if (strcmp(ops, "!") == 0)
+        return EmitNot(cg);
+    else Assert(0);
     return NULL;
 }
 
 int LogicalExpr::GetMemBytes() {
+    const char *ops = op->GetOperation();
+    if (strcmp(ops, "&&") == 0) 
+        return GetMemBytesAnd();
+    else if (strcmp(ops, "||") == 0) 
+        return GetMemBytesOr();
+    else if (strcmp(ops, "!") == 0)
+        return GetMemBytesNot();
+    else Assert(0);
     return 0;
 }
 
 Location* LogicalExpr::EmitAnd(CodeGenerator *cg) {
-    return NULL;
+    Location* lLoc = left->Emit(cg);
+    Location* rLoc = right->Emit(cg);
+    Location* res = cg->GenBinaryOp("&&",lLoc, rLoc);
+
+    return res;
 }
 
 int LogicalExpr::GetMemBytesAnd() {
-    return 0;
+    return left->GetMemBytes() + right->GetMemBytes() + CodeGenerator::VarSize ;
 }
 
 Location* LogicalExpr::EmitOr(CodeGenerator *cg) {
-    return NULL;
+    Location* lLoc = left->Emit(cg);
+    Location* rLoc = right->Emit(cg);
+    Location* res = cg->GenBinaryOp("||",lLoc, rLoc);
+
+    return res;
 }
 
 int LogicalExpr::GetMemBytesOr() {
-    return 0;
+    return left->GetMemBytes() + right->GetMemBytes() + CodeGenerator::VarSize ;
 }
 
 Location* LogicalExpr::EmitNot(CodeGenerator *cg) {
-    return NULL;
+    Assert(left == NULL);
+    Assert(right != NULL);
+    const char * oLabel = cg->NewLabel();
+    const char * zLabel = cg->NewLabel();
+    Location* rLoc = right->Emit(cg);
+    Location* res = cg->GenTempVar();
+    Location* zLoc = cg->GenLoadConstant(0);
+    Location* oLoc = cg->GenLoadConstant(1);
+
+    cg->GenIfZ(rLoc,zLabel);
+    cg->GenAssign(res,oLoc);
+    cg->GenGoto(oLabel);
+    cg->GenLabel(zLabel);
+    cg->GenAssign(res,zLoc);
+    cg->GenLabel(oLabel);
+
+    return res;
 }
 
 int LogicalExpr::GetMemBytesNot() {
-    return 0;
+    return left->GetMemBytes() + right->GetMemBytes() + 3 * CodeGenerator::VarSize ;
 }
-
 
 Expr * AssignExpr::resExpr() {
     Expr* lfExpr = left->resExpr();
@@ -365,33 +459,39 @@ Expr * AssignExpr::resExpr() {
     }
 }
 
-/* bool AssignExpr::check() {
-    resExpr();
-    return false;
-}
- */
 Type* AssignExpr::GetResType() {
     Assert(left != NULL && right != NULL);
     Type *lType = left->GetResType();
     Type *rType = right->GetResType();
-    // printf("fuck!\n");
     if (lType->isError() || rType->isError()) return Type::errorType;
     if (lType->EqualsTo(rType) && !lType->EqualsTo(Type::voidType)) {
         return lType;
     } else {
-        // printf("%s\n",lType->GetTypeName());
         ReportError::IncompatibleOperands(op,lType,rType);
-        // printf("fuck!\n");
         return Type::errorType;
     }
 }
 
 Location* AssignExpr::Emit(CodeGenerator *cg) {
-    return NULL;
+    Location* rLoc = right->Emit(cg);
+    LValue *lval = dynamic_cast<LValue*>(left);
+
+    /** for LValue, which we can find mem locatioN, should just
+     * store the value into the mem, but if not , the Emit 
+     * function return a location of tmp value, and just 
+     * assign the val to the tmp value **/
+    if (lval != NULL) 
+        return lval->EmitStore(cg, rLoc);
+    Location *lLoc = left->Emit(cg);
+    cg->GenAssign(lLoc, rLoc);
+    return lLoc;
 }
 
 int AssignExpr::GetMemBytes() {
-    return 0;
+    LValue *lval = dynamic_cast<LValue*>(left);
+    if (lval != NULL) 
+        return right->GetMemBytes() + lval->GetMemBytesStore();
+    return right->GetMemBytes() + left->GetMemBytes();
 }
 
 Expr * PostfixExpr::resExpr() {
@@ -433,22 +533,64 @@ Type* PostfixExpr::GetResType() {
 }
 
 Location* PostfixExpr::Emit(CodeGenerator *cg) {
+    const char * ops = op->GetOperation();
+    if (strcmp(ops, "++"))
+        return EmitPlus(cg);
+    else if (strcmp(ops, "--")) 
+        return EmitMinus(cg);
+    else Assert(0);
     return NULL;
 }
 
 int PostfixExpr::GetMemBytes() {
+    const char * ops = op->GetOperation();
+    if (strcmp(ops, "++"))
+        return GetMemBytesPlus();
+    else if (strcmp(ops, "--")) 
+        return GetMemBytesMinus();
+    else Assert(0);
     return 0;
 }
 
-/* bool PostfixExpr::check() {
-    return true;
-} */
+Location* PostfixExpr::EmitMinus(CodeGenerator *cg) {
+    Location* one = cg->GenLoadConstant(1);
+    Location* lLoc = left->Emit(cg);
+    LValue * lVal = dynamic_cast<LValue*>(left);
+    Location* tLoc = cg->GenBinaryOp("-", lLoc, one);
 
-/* bool LValue::check() {
-    return true;
-} */
+    if (lVal != NULL) {
+        return lVal->EmitStore(cg,tLoc);
+    }
+    cg->GenAssign(lLoc, tLoc);
+    return lLoc;
+}
+int PostfixExpr::GetMemBytesMinus() {
+    LValue * lVal = dynamic_cast<LValue*>(left);
+    if (lVal != NULL) {
+        return lVal->GetMemBytesStore() + left->GetMemBytes() + CodeGenerator::VarSize;
+    }
+    return left->GetMemBytes() + CodeGenerator::VarSize;
+}
+Location* PostfixExpr::EmitPlus(CodeGenerator * cg) {
+    Location* one = cg->GenLoadConstant(1);
+    Location* lLoc = left->Emit(cg);
+    LValue * lVal = dynamic_cast<LValue*>(left);
+    Location* tLoc = cg->GenBinaryOp("+", lLoc, one);
 
-/* ************************* */
+    if (lVal != NULL) {
+        return lVal->EmitStore(cg,tLoc);
+    }
+    cg->GenAssign(lLoc, tLoc);
+    return lLoc;
+}
+int PostfixExpr::GetMemBytesPlus() {
+    LValue * lVal = dynamic_cast<LValue*>(left);
+    if (lVal != NULL) {
+        return lVal->GetMemBytesStore() + left->GetMemBytes() + CodeGenerator::VarSize;
+    }
+    return left->GetMemBytes() + CodeGenerator::VarSize;
+
+}
 
 void This::creatStable() {
     
@@ -565,15 +707,12 @@ Expr * FieldAccess::resExpr() {
     if (base != NULL) bExpr = base->resExpr();
     else {
         char *id = field->GetName();
-        // printf("%s %d\n",id, sTable->HasParent());
         st_entry *ste = sTable->find(id);
         if (ste != NULL) {
             sTable = ste->decl->sTable;
-            // ste->decl->GetDeclType();
             return this;
         }
     }
-    // printf("b:%p\n",bExpr);
     return bExpr;
 }
 
@@ -582,7 +721,6 @@ bool FieldAccess::check() {
 }
 
 void FieldAccess::creatStable() {
-    // printf("fuck!!!\n");
     if (base != NULL) {
         base->sTable->AddParent(sTable);
         base->creatStable();
@@ -598,28 +736,18 @@ Type* FieldAccess::GetResType() {
     bool res = false;
     char *key = field->GetName();
     if (base == NULL) {
-        // res = sTable->check(key);
         st_entry * ste = sTable->find(key);
-        // printf("%d\n",sTable->HasParent());
         if (!ste) {
-            // printf("fuck!\n");
-            // printf("%s\n",key);
             ReportError::IdentifierNotDeclared(field,LookingForVariable);
             return Type::errorType;
         } else {
-            // printf("%s %s\n",ste->decl->GetTypeName(), key);
-            // printf("%s\n",ste->decl->GetType()->GetTypeName());
-            
             return ste->decl->GetType();
         }
     } else {
         Type* bType = base->GetResType();
         if (bType->isError()) return Type::errorType;
-        // st_entry *st = sTable->find(bType->GetTypeName());
-        // printf("%s\n",bType->GetTypeName());
         st_entry * ste = sTable->find(bType->GetTypeName());
         if (ste == NULL) {
-            // printf("fuck!\n");
             ReportError::FieldNotFoundInBase(field,bType);
             return Type::errorType;
         }
@@ -627,9 +755,7 @@ Type* FieldAccess::GetResType() {
             ReportError::FieldNotFoundInBase(field,bType);
             return Type::errorType;
         }
-        // printf("fuck!\n");
         st_entry *mte = ste->decl->sTable->Lookup(key);
-        // printf("fuck!\n");
         if (!mte) {
             ReportError::FieldNotFoundInBase(field,bType);
             return Type::errorType;
@@ -637,25 +763,64 @@ Type* FieldAccess::GetResType() {
         if (mte->decl->GetDeclType() == varDeclType) {
             ReportError::InaccessibleField(field,bType);
         }
-        // printf("%p\n",mte->decl->GetType());
-        // printf("fuck!\n");
         return mte->decl->GetType();
     }
 }
 
 Location* FieldAccess::Emit(CodeGenerator *cg) {
+    char *key = field->GetName();
+    if (base == NULL) {
+        Decl * decl = sTable->find(key)->decl;
+        Assert(decl != NULL);
+        VarDecl* vDecl = dynamic_cast<VarDecl*> (decl);
+        Assert(vDecl != NULL);
+        Location *loc = vDecl->GetMemLoc();
+        if (loc) return loc;
+        else {}
+    } else {
+        /** object orient like obj.mem
+         * for which need to load method or artribute before using
+         * because an object is stored as a pointer as a local variable
+         * so, when call a method, we need to find method address according 
+         * VTable of class by VTable address and offset to the head of VTable
+         * and artribute so on**/
+    }
     return NULL;
 }
 
 int FieldAccess::GetMemBytes() {
-    return 0;
+    char *key = field->GetName();
+    if (base == NULL) {
+        VarDecl *vDecl = dynamic_cast<VarDecl*>(sTable->find(key)->decl);
+        Assert(vDecl != NULL);
+        Location *loc = vDecl->GetMemLoc();
+        if (loc) return 0;
+        else {}
+    }
+    return CodeGenerator::VarSize;
 }
 
 Location* FieldAccess::EmitStore(CodeGenerator *cg, Location *val) {
+    char *key = field->GetName();
+    if (base == NULL) {
+        VarDecl *vDecl = dynamic_cast<VarDecl*>(sTable->find(key)->decl);
+        Assert(vDecl != NULL);
+        Location * loc = vDecl->GetMemLoc();
+        if (loc) {
+            cg->GenAssign(loc,val);
+            return loc;
+        } else {
+            return NULL;
+        }
+    }
+    /** object orient **/
+    /** object.xxx **/ 
     return NULL;
 }
 
 int FieldAccess::GetMemBytesStore() {
+    /** Just store value into destination, 
+     * will not generation tmp value**/
     return 0;
 }
 
@@ -736,11 +901,9 @@ Type* Call::GetResType() {
         return fn->GetType();
     } else {
         Type* bType = base->GetResType();
-        // printf("fuck!\n");
         if (bType->isError()) return Type::errorType;
         
         st_entry * ste = sTable->find(bType->GetTypeName());
-        // printf("fuck!\n");
         if (ste == NULL) {
             ReportError::FieldNotFoundInBase(field,bType);
             return Type::errorType;
@@ -751,24 +914,18 @@ Type* Call::GetResType() {
         }
         for (int i = 0 ; i < actuals->NumElements();++i)
             if(actuals->Nth(i)->GetResType()->isError()) ;
-        // printf("fuck!\n");
         st_entry *mte = ste->decl->sTable->Lookup(id);
         if (!mte) {
             ReportError::FieldNotFoundInBase(field,bType);
             return Type::errorType;
         }
-        // printf("fuck!\n");
         if (mte->decl->GetType()->GetDeclType() != fnDeclType) return Type::errorType;
-        // printf("fuck!\n");
         FnDecl * fn = dynamic_cast<FnDecl *>(mte->decl);
-        // printf("%p\n",fn);
         List<VarDecl*> * args = fn->GetArgs();
-        // printf("fuck!\n");
         if (args->NumElements() != actuals->NumElements()) {
             ReportError::NumArgsMismatch(field,args->NumElements(),actuals->NumElements());
             return Type::errorType;
         }
-        // printf("fuck!\n");
         for(int i = 0 ; i < args->NumElements(); ++i) {
             if (!args->Nth(i)->GetType()->EqualsTo(actuals->Nth(i)->GetResType())){
                 ReportError::ArgMismatch(actuals->Nth(i),i,args->Nth(i)->GetType(),actuals->Nth(i)->GetResType());
@@ -892,14 +1049,11 @@ Type* NewArrayExpr::GetResType() {
             return Type::errorType;
         }
         if (ste->decl->GetType()->GetDeclType() != classDeclType) {
-            // ReportError::IdentifierNotDeclared(cType->id,LookingForClass);
             ReportError::IdentifierNotDeclared(new Identifier(*(elemType->GetLocation()),elemType->GetTypeName()),LookingForType);
             return Type::errorType;
         }
     }
-    // strcat(tName,"Array");
     return new ArrayType(*GetLocation(),elemType);
-    // return new Type(tName,newArrayExpr);
 }
 
 Location* NewArrayExpr::Emit(CodeGenerator *cg) {
