@@ -102,21 +102,6 @@ Type* CompoundExpr::GetResType() {
     return Type::errorType;
 }
 
-Expr * ArithmeticExpr::resExpr() {
-    Expr* lfExpr = NULL;
-    Expr* rghExpr =NULL;
-    if (left != NULL) lfExpr = left->resExpr();
-    if (right != NULL) rghExpr = right->resExpr();
-    char *leftType, *tghEype;
-    
-    if (lfExpr->GetExprType() != rghExpr->GetExprType()) {
-        printf("error: %s %s %s.\n",lfExpr->GetExprName(), op->GetOperation(), rghExpr->GetExprName());
-        return NULL;
-    } else {
-        return lfExpr == NULL ? rghExpr : lfExpr;
-    }
-}
-
 Location* ArithmeticExpr::Emit(CodeGenerator *cg) {
     if (left == NULL) return EmitUnary(cg);
     else return EmitBinary(cg);
@@ -158,19 +143,6 @@ void ArithmeticExpr::creatStable() {
     right->sTable->AddParent(sTable);
     right->creatStable(); 
     // check();
-}
-
-Expr * RelationalExpr::resExpr() {
-    Expr* lfExpr = left->resExpr();
-    Expr* rghExpr  = right->resExpr();
-    char *leftType, *tghEype;
-    
-    if (lfExpr->GetExprType() != rghExpr->GetExprType()) {
-        printf("error: %s %s %s.\n",lfExpr->GetExprName(), op->GetOperation(), rghExpr->GetExprName());
-        return NULL;
-    } else {
-        return new BoolConstant(*op->GetLocation(),"false");
-    }
 }
 
 Type* RelationalExpr::GetResType() {
@@ -235,20 +207,6 @@ Location* RelationalExpr::EmitLessEqual(CodeGenerator *cg, Expr *l, Expr *r) {
 int RelationalExpr::GetMemBytesLessEqual(Expr *l, Expr *r) {
     return left->GetMemBytes() + right->GetMemBytes() + 3 * CodeGenerator::VarSize;
 }
-
-Expr * EqualityExpr::resExpr() {
-    Expr* lfExpr = left->resExpr();
-    Expr* rghExpr  = right->resExpr();
-    char *leftType, *tghEype;
-    
-    if (lfExpr->GetExprType() != rghExpr->GetExprType()) {
-        printf("error: %s %s %s.\n",lfExpr->GetExprName(), op->GetOperation(), rghExpr->GetExprName());
-        return NULL;
-    } else {
-        return new BoolConstant(*op->GetLocation(),"false");
-    }
-}
-
 
 Type* EqualityExpr::GetResType() {
     Assert(left!=NULL && right != NULL);
@@ -334,19 +292,6 @@ void LogicalExpr::creatStable() {
     } 
     right->sTable->AddParent(sTable);
     right->creatStable(); 
-}
-
-Expr * LogicalExpr::resExpr() {
-    Expr* lfExpr = left->resExpr();
-    Expr* rghExpr  = right->resExpr();
-    char *leftType, *tghEype;
-    
-    if (lfExpr->GetExprType() != rghExpr->GetExprType()) {
-        printf("error: %s %s %s.\n",lfExpr->GetExprName(), op->GetOperation(), rghExpr->GetExprName());
-        return NULL;
-    } else {
-        return new BoolConstant(*op->GetLocation(),"false");
-    }
 }
 
 Type* LogicalExpr::GetResType() {
@@ -444,21 +389,6 @@ int LogicalExpr::GetMemBytesNot() {
     return left->GetMemBytes() + right->GetMemBytes() + 3 * CodeGenerator::VarSize ;
 }
 
-Expr * AssignExpr::resExpr() {
-    Expr* lfExpr = left->resExpr();
-    Expr* rghExpr  = right->resExpr();
-    char *leftType, *tghEype;
-    printf("fuck!\n");
-    printf("%p %p\n",lfExpr,rghExpr);
-    printf("%d\n",sTable->HasParent());
-    if (lfExpr->GetExprType() != rghExpr->GetExprType()) {
-        printf("error: %s %s %s.\n",lfExpr->GetExprName(), op->GetOperation(), rghExpr->GetExprName());
-        return NULL;
-    } else {
-        return lfExpr;
-    }
-}
-
 Type* AssignExpr::GetResType() {
     Assert(left != NULL && right != NULL);
     Type *lType = left->GetResType();
@@ -492,19 +422,6 @@ int AssignExpr::GetMemBytes() {
     if (lval != NULL) 
         return right->GetMemBytes() + lval->GetMemBytesStore();
     return right->GetMemBytes() + left->GetMemBytes();
-}
-
-Expr * PostfixExpr::resExpr() {
-    Expr* lExpr = NULL;
-    if (left != NULL) lExpr  = left->resExpr();
-    int lType = lExpr->GetExprType();
-    
-    if (lType != intConstant && lType != doubleConstant) {
-        printf("error: %s %s.\n",op->GetOperation(), lExpr->GetExprName());
-        return NULL;
-    } else {
-        return lExpr;
-    }
 }
 
 void PostfixExpr::creatStable() {
@@ -589,7 +506,6 @@ int PostfixExpr::GetMemBytesPlus() {
         return lVal->GetMemBytesStore() + left->GetMemBytes() + CodeGenerator::VarSize;
     }
     return left->GetMemBytes() + CodeGenerator::VarSize;
-
 }
 
 void This::creatStable() {
@@ -647,18 +563,6 @@ Type* ArrayAccess::GetResType() {
     return new Type(bType->GetTypeName(),arrayAcess);
 }
 
-/* Attention */
-Expr * ArrayAccess::resExpr() {
-    Expr * rExpr = NULL, *bExpr = NULL;
-    if (subscript != NULL) rExpr = subscript->resExpr();
-    if (base != NULL) bExpr = base -> resExpr();
-    if (rExpr->GetExprType() != intConstant) {
-        printf("error:array index cannot be %s\n", rExpr->GetExprName());
-        return NULL;
-    } else {
-        return bExpr;
-    }
-}
 
 Location* ArrayAccess::Emit(CodeGenerator *cg) {
     return nullptr;
@@ -700,20 +604,6 @@ FieldAccess::FieldAccess(Expr *b, Identifier *f)
     base = b; 
     if (base) base->SetParent(this); 
     (field=f)->SetParent(this);
-}
-
-Expr * FieldAccess::resExpr() {
-    Expr* bExpr = NULL;
-    if (base != NULL) bExpr = base->resExpr();
-    else {
-        char *id = field->GetName();
-        st_entry *ste = sTable->find(id);
-        if (ste != NULL) {
-            sTable = ste->decl->sTable;
-            return this;
-        }
-    }
-    return bExpr;
 }
 
 bool FieldAccess::check() {
@@ -864,9 +754,6 @@ bool Call::check() {
 }
 
 /* ***************************** */
-Expr * Call::resExpr() {
-    return NULL;
-}
 
 Type* Call::GetResType() {
     char *id = field->GetName();
@@ -989,10 +876,6 @@ bool NewExpr::check() {
     return GetResType()->EqualsTo(Type::errorType);
 }
 
-Expr* NewExpr::resExpr() {
-    return NULL;
-}
-
 Type * NewExpr::GetResType() {
     char * name = cType->GetTypeName();
     st_entry *ste = sTable->find(name);
@@ -1026,9 +909,6 @@ void NewArrayExpr::creatStable() {
     size->creatStable();
 }
 
-Expr* NewArrayExpr::resExpr() {
-    return NULL;
-}
 
 bool NewArrayExpr::check() {
     return GetResType()->EqualsTo(Type::errorType);

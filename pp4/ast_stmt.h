@@ -16,6 +16,7 @@
 #include "list.h"
 #include "ast.h"
 #include "ast_signaltable.h"
+#include <stack>
 
 class Decl;
 class VarDecl;
@@ -30,6 +31,7 @@ class Program : public Node
   public:
      Program(List<Decl*> *declList);
      static SignalTable *gStable;
+     static stack<const char*> *gBLabels;
      void Check();
      void Emit();
 };
@@ -139,6 +141,8 @@ class CaseStmt : public Stmt
 
     Location* Emit(CodeGenerator* cg) ;
     int GetMemBytes();
+
+    friend class SwitchStmt;
 };
 
 class DefaultStmt : public Stmt

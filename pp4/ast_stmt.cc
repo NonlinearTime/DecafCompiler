@@ -9,6 +9,7 @@
 #include "errors.h"
 
 SignalTable *Program::gStable = new SignalTable; 
+stack<const char*> *Program::gBLabels = new stack<const char *>();
 
 
 Program::Program(List<Decl*> *d) {
@@ -156,11 +157,27 @@ bool ForStmt::check() {
 }
 
 Location* ForStmt::Emit(CodeGenerator * cg) {
+    const char * tLabel = cg->NewLabel();
+    const char * fLabel = cg->NewLabel();
+
+    Program::gBLabels->push(fLabel);
+
+    init->Emit(cg);
+    cg->GenLabel(tLabel);
+    Location *tLoc = test->Emit(cg);
+    cg->GenIfZ(tLoc, fLabel);
+    body->Emit(cg);
+    step->Emit(cg);
+    cg->GenGoto(tLabel);
+    cg->GenLabel(fLabel);
+
+    Program::gBLabels->pop();
+
     return NULL;
 }
 
 int ForStmt::GetMemBytes() {
-    return 0;
+    return init->GetMemBytes() + test->GetMemBytes() + body->GetMemBytes() + step->GetMemBytes() ;
 }
 
 void WhileStmt::creatStable() {
@@ -179,11 +196,25 @@ bool WhileStmt::check() {
 }
 
 Location* WhileStmt::Emit(CodeGenerator * cg) {
+    const char * tLabel = cg->NewLabel();
+    const char * fLabel = cg->NewLabel();
+
+    Program::gBLabels->push(fLabel);
+
+    cg->GenLabel(tLabel);
+    Location *tLoc = test->Emit(cg);
+    cg->GenIfZ(tLoc, fLabel);
+    body->Emit(cg);
+    cg->GenGoto(tLabel);
+    cg->GenLabel(fLabel);
+
+    Program::gBLabels->pop();
+
     return NULL;
 }
 
 int WhileStmt::GetMemBytes() {
-    return 0;
+    return test->GetMemBytes() + body->GetMemBytes() ;
 }
 
 IfStmt::IfStmt(Expr *t, Stmt *tb, Stmt *eb): ConditionalStmt(t, tb) { 
@@ -212,11 +243,25 @@ bool IfStmt::check() {
 }
 
 Location* IfStmt::Emit(CodeGenerator * cg) {
+    const char* elseLabel = cg->NewLabel();
+    const char* endLabel = cg->NewLabel();
+
+    Location* tLoc = test->Emit(cg);
+    cg->GenIfZ(tLoc, elseLabel);
+    body->Emit(cg);
+    cg->GenGoto(endLabel);
+    cg->GenLabel(elseLabel);
+    if (elseBody) elseBody->Emit(cg);
+    cg->GenLabel(endLabel);
+
     return NULL;
 }
 
 int IfStmt::GetMemBytes() {
-    return 0;
+    if (elseBody) 
+        return test->GetMemBytes() + body->GetMemBytes();
+    else 
+        return test->GetMemBytes() + body->GetMemBytes() + elseBody->GetMemBytes();
 }
 
 CaseStmt::CaseStmt(Expr *l, List<Stmt*> *stmtL) {
@@ -236,11 +281,18 @@ void CaseStmt::creatStable() {
 }
 
 Location* CaseStmt::Emit(CodeGenerator * cg) {
+    int n = stmtList->NumElements();
+    for (int i = 0 ; i < n; ++i)
+        stmtList->Nth(i)->Emit(cg);
     return NULL;
 }
 
 int CaseStmt::GetMemBytes() {
-    return 0;
+    int memBytes = 0;
+    int n = stmtList->NumElements();
+    for (int i = 0 ; i < n; ++i)
+        memBytes += stmtList->Nth(i)->GetMemBytes();
+    return memBytes;
 }
 
 DefaultStmt::DefaultStmt(List<Stmt*> *stmtL) {
@@ -261,11 +313,18 @@ void DefaultStmt::creatStable() {
 }
 
 Location* DefaultStmt::Emit(CodeGenerator * cg) {
+    int n = stmtList->NumElements();
+    for (int i = 0 ; i < n; ++i)
+        stmtList->Nth(i)->Emit(cg);
     return NULL;
 }
 
 int DefaultStmt::GetMemBytes() {
-    return 0;
+    int memBytes = 0;
+    int n = stmtList->NumElements();
+    for (int i = 0 ; i < n; ++i)
+        memBytes += stmtList->Nth(i)->GetMemBytes();
+    return memBytes;
 }
 
 SwitchStmt::SwitchStmt(Expr *e, List<CaseStmt*> *caseL,  DefaultStmt *Ds) {
@@ -288,11 +347,52 @@ void SwitchStmt::creatStable() {
 }
 
 Location* SwitchStmt::Emit(CodeGenerator * cg) {
+    int n = caseList->NumElements();
+    char* caseLabels[n];
+    for (int i = 0 ; i < n ; ++i) 
+        caseLabels[i] = cg->NewLabel();
+    const char* defaultLabel = cg->NewLabel();
+    const char* endLabel = cg->NewLabel();
+
+    Program::gBLabels->push(endLabel);
+
+    Location* eLoc = expr->Emit(cg);
+    Location* tLoc = NULL;
+
+    for (int i = 0 ; i < n ; ++i) {
+        const char* botLabel = cg->NewLabel(); 
+        Location* clabelLoc = caseList->Nth(i)->label->Emit(cg);
+        tLoc = cg->GenBinaryOp("==",eLoc,clabelLoc);
+        cg->GenIfZ(tLoc,botLabel);
+        cg->GenGoto(caseLabels[i]);
+        cg->GenLabel(botLabel);
+    }
+    cg->GenGoto(defaultLabel);
+
+    for (int i = 0 ; i < n; ++i) {
+        cg->GenLabel(caseLabels[i]);
+        caseList->Nth(i)->Emit(cg);
+    }
+    cg->GenLabel(defaultLabel);
+    defaultStmt->Emit(cg);
+    cg->GenLabel(endLabel);
+
+    Program::gBLabels->pop();
+
     return NULL;
 }
 
 int SwitchStmt::GetMemBytes() {
-    return 0;
+    int memBytes = 0;
+    int n = caseList->NumElements();
+    memBytes += expr->GetMemBytes();
+    for (int i = 0 ; i < n ; ++i) 
+        memBytes += CodeGenerator::VarSize 
+        + caseList->Nth(i)->label->GetMemBytes()
+        + caseList->Nth(i)->GetMemBytes();
+    memBytes += defaultStmt->GetMemBytes();
+    
+    return memBytes;
 }
 
 bool SwitchStmt::check() {
@@ -305,6 +405,7 @@ void BreakStmt::creatStable() {
 }
 
 Location* BreakStmt::Emit(CodeGenerator * cg) {
+    cg->GenGoto(Program::gBLabels->top());
     return NULL;
 }
 

@@ -30,7 +30,6 @@ class Expr : public Stmt
     virtual void creatStable() = 0;
     virtual int GetExprType() = 0;
     virtual const char *GetExprName() = 0;
-    virtual Expr* resExpr() = 0;
     virtual Type* GetResType() = 0;
 
     virtual Location* Emit(CodeGenerator *cg) = 0;
@@ -47,7 +46,6 @@ class EmptyExpr : public Expr
     bool check() {return true;}
     int GetExprType() {return emptyExpr;}
     const char *GetExprName() {return "EmptyExpr";}
-    Expr* resExpr() {return this;} 
     Type* GetResType() {return NULL;}
 
     Location* Emit(CodeGenerator *cg) {return NULL;}
@@ -65,7 +63,6 @@ class IntConstant : public Expr
     bool check() {return true;}
     int GetExprType() {return intConstant;}
     const char *GetExprName() {return "int";}
-    Expr* resExpr() {return this;}
     Type* GetResType() {return new Type(GetExprName(),GetExprType());}
     
     Location* Emit(CodeGenerator *cg) {return cg->GenLoadConstant(value);}
@@ -83,7 +80,6 @@ class DoubleConstant : public Expr
     bool check() {return true;}
     int GetExprType() {return doubleConstant;}
     const char *GetExprName() {return "double" ;}
-    Expr* resExpr() {return this;}
     Type* GetResType() {return new Type(GetExprName(),GetExprType());}
     Location* Emit(CodeGenerator *cg) {Assert(0); return NULL;}
     int GetMemBytes() {return 4;}
@@ -100,7 +96,6 @@ class BoolConstant : public Expr
     bool check() {return true;}
     int GetExprType() {return boolConstant;}
     const char *GetExprName() {return "bool";}
-    Expr* resExpr() {return this;}
     Type* GetResType() {return new Type(GetExprName(),GetExprType());}
     Location* Emit(CodeGenerator *cg) {return cg->GenLoadConstant(value ? 1 : 0);}
     int GetMemBytes() {return 4;}
@@ -117,7 +112,6 @@ class StringConstant : public Expr
     bool check() {return true;}
     int GetExprType() {return stringConstant;}
     const char *GetExprName() {return "string";}
-    Expr* resExpr() {return this ;}
     Type* GetResType() {return new Type(GetExprName(),GetExprType());}
     Location* Emit(CodeGenerator *cg) {return cg->GenLoadConstant(value);}
     int GetMemBytes() {return 4;}
@@ -131,7 +125,6 @@ class NullConstant: public Expr
     bool check() {return true;}
     int GetExprType() {return nullConstant;}
     const char *GetExprName() {return "null";}
-    Expr* resExpr() {return this ;}
     Type* GetResType() {return new Type(GetExprName(),GetExprType());}
     Location* Emit(CodeGenerator *cg) {return cg->GenLoadConstant(0);}
     int GetMemBytes() {return 4;}
@@ -163,7 +156,6 @@ class CompoundExpr : public Expr
     virtual bool check();     
     virtual int GetExprType() = 0;
     virtual const char *GetExprName() = 0;
-    virtual Expr* resExpr() = 0;     
     virtual Type* GetResType();
 
     virtual Location* Emit(CodeGenerator *cg) = 0;
@@ -178,7 +170,6 @@ class ArithmeticExpr : public CompoundExpr
     void creatStable(); 
     int GetExprType() {return arithmeticExpr;}  
     const char *GetExprName() {return op->GetOperation();}
-    Expr * resExpr();
     // bool check();
     // const char *GetResType();
     Location* Emit(CodeGenerator *cg);
@@ -199,7 +190,6 @@ class RelationalExpr : public CompoundExpr
     // void creatStable() {}    
     int GetExprType() {return relationalExpr;} 
     const char *GetExprName() {return op->GetOperation();}
-    Expr * resExpr();
     Type * GetResType();
 
     Location * Emit(CodeGenerator * cg);
@@ -222,7 +212,6 @@ class EqualityExpr : public CompoundExpr
     // void creatStable() {}     
     int GetExprType() {return equalityExpr;}
     const char *GetExprName() {return op->GetOperation();}
-    Expr * resExpr();
     Type* GetResType();
 
     Location * Emit(CodeGenerator *cg);
@@ -244,7 +233,6 @@ class LogicalExpr : public CompoundExpr
     void creatStable();   
     int GetExprType() {return logicalExpr;}
     const char *GetExprName() {return op->GetOperation();}
-    Expr* resExpr();
     Type* GetResType();
     // bool check();
 
@@ -270,7 +258,6 @@ class AssignExpr : public CompoundExpr
     // void creatStable() {printf("fuck!\n");}    
     int GetExprType() {return assignExpr;} 
     const char *GetExprName() {return op->GetOperation();}
-    Expr* resExpr();
     // bool check();
     Type* GetResType();
 
@@ -287,7 +274,6 @@ class PostfixExpr : public CompoundExpr
     // bool check(); 
     const char *GetExprName() {return op->GetOperation();}
     int GetExprType() {return postfixExpr;}
-    Expr* resExpr();
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
@@ -308,7 +294,6 @@ class LValue : public Expr
     // virtual bool check();
     virtual const char *GetExprName() = 0;
     virtual int GetExprType() {return lValue;}
-    virtual Expr* resExpr() = 0;
     virtual Type* GetResType() = 0;
 
     virtual Location* Emit(CodeGenerator *cg) = 0;
@@ -327,7 +312,6 @@ class This : public Expr
     bool check() {return true;}
     int GetExprType() {return __this;}
     const char *GetExprName() {return "this";}
-    Expr* resExpr() {return this;}
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
@@ -345,7 +329,6 @@ class ArrayAccess : public LValue
     bool check(); 
     int GetExprType() {return arrayAcess;}
     const char *GetExprName() {return "ArrayAccess";}
-    Expr* resExpr();
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
@@ -379,7 +362,6 @@ class FieldAccess : public LValue
     bool check();     
     int GetExprType();
     const char *GetExprName() {return "FieldAccess";}
-    Expr* resExpr();
     void creatStable();
     Type* GetResType();
 
@@ -417,7 +399,6 @@ class Call : public Expr
     bool check();
     int GetExprType() {return __call;}
     const char *GetExprName() {return "call";}
-    Expr* resExpr();
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
@@ -450,7 +431,6 @@ class NewExpr : public Expr
     bool check();
     int GetExprType() {return newExpr;}
     const char *GetExprName() {return "new";}
-    Expr* resExpr();
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
@@ -469,7 +449,6 @@ class NewArrayExpr : public Expr
     bool check();
     int GetExprType() {return newArrayExpr;}
     const char *GetExprName() {return "NewArray";}
-    Expr* resExpr();
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
@@ -488,7 +467,6 @@ class ReadIntegerExpr : public Expr
     bool check() {return true;}
     int GetExprType() {return readIntegerExpr;}
     const char *GetExprName() {return "ReadInt";}
-    Expr* resExpr() {return NULL;}
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
@@ -503,7 +481,6 @@ class ReadLineExpr : public Expr
     bool check() {return true;}
     int GetExprType() {return readLineExpr;}
     const char *GetExprName() {return "ReadLine";}
-    Expr* resExpr() {return NULL;}
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
