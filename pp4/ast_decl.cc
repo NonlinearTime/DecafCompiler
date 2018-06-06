@@ -123,7 +123,7 @@ FnDecl::FnDecl(Identifier *n, Type *r, List<VarDecl*> *d) : Decl(n) {
     isMethod = false;
     label = new std::string(GetName());
     if (*label != "main")
-        label->insert(0,"____");
+        label->insert(0,"__");
 }
 
 void FnDecl::SetFunctionBody(Stmt *b) { 
@@ -170,4 +170,8 @@ int FnDecl::GetMemBytes() {
 
 const char * FnDecl::GetLabel() {
     return label->c_str();
+}
+
+bool FnDecl::HasReturnVal() {
+    return !returnType->EqualsTo(Type::voidType);
 }

@@ -164,6 +164,7 @@ class FnDecl : public Decl
     void SetIsMethod(bool isMethod) {this->isMethod = isMethod;}
     
     const char * GetLabel();
+    bool HasReturnVal();
 
     friend class SignalTable;
 };

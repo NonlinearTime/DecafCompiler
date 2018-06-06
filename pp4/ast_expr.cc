@@ -8,6 +8,7 @@
 #include "ast_type.h"
 #include "ast_decl.h"
 #include "errors.h"
+#include <stack>
 
 
 IntConstant::IntConstant(yyltype loc, int val) : Expr(loc) {
@@ -567,37 +568,66 @@ Type* ArrayAccess::GetResType() {
 
 
 Location* ArrayAccess::Emit(CodeGenerator *cg) {
-    return nullptr;
+    Location* addr = EmitAddr(cg);
+    Location* res = cg->GenLoad(addr);
+    return res;
 }
 
-int ArrayAccess::GetMemBytes() {
-    return 0;
+int ArrayAccess::GetMemBytes() {    
+    return GetMemBytesAddr() +CodeGenerator::VarSize ;
 }
 
 Location* ArrayAccess::EmitStore(CodeGenerator *cg, Location *val) {
-    return NULL;
+    Location* addr = EmitAddr(cg);
+    cg->GenStore(addr,val);
+    return cg->GenLoad(addr);
 }
 
 int ArrayAccess::GetMemBytesStore() {
+    
     return 0;
 }
 
 Location* ArrayAccess::EmitAddr(CodeGenerator *cg) {
-    return NULL;
+    Location* oLoc = base->Emit(cg);
+    Location* sLoc = subscript->Emit(cg);
+    Location* step = cg->GenLoadConstant(CodeGenerator::VarSize);
+    EmitRuntimeSubscriptCheck(cg,oLoc,sLoc);
+    Location* offset = cg->GenBinaryOp("*",sLoc,step);
+    Location* addr = cg->GenBinaryOp("+",oLoc, offset);
+    return cg->GenBinaryOp("+", addr,step);
 }
 
 int ArrayAccess::GetMemBytesAddr() {
-    return 0;
+    return base->GetMemBytes() + subscript->GetMemBytes() +  4 * CodeGenerator::VarSize;
 }
 
 Location* ArrayAccess::EmitRuntimeSubscriptCheck(CodeGenerator *cg,
                                                  Location *arr,
                                                  Location *sub) {
+    
+    Location* size = cg->GenLoad(arr);
+    Location* zero = cg->GenLoadConstant(0);
+
+    Location* lessThanZero = cg->GenBinaryOp("<",sub,zero);
+    Location* equalToZero = cg->GenBinaryOp("==",size,sub);
+    Location* greateThanSize = cg->GenBinaryOp("<", size, sub);
+
+    Location* geqSize = cg->GenBinaryOp("||", greateThanSize, equalToZero);
+    Location* invalidSub = cg->GenBinaryOp("||", lessThanZero, greateThanSize);
+
+    const char *validLabel  = cg->NewLabel();
+    cg->GenIfZ(invalidSub, validLabel);
+    /**** invalid substript exception ****/
+    
+
+    /*************************************/
+    cg->GenLabel(validLabel);
     return NULL;
 }
 
 int ArrayAccess::GetMemBytesRuntimeSubscriptCheck() {
-    return 0;
+    return 7 * CodeGenerator::VarSize;
 }
 
 FieldAccess::FieldAccess(Expr *b, Identifier *f) 
@@ -827,6 +857,28 @@ Type* Call::GetResType() {
 }
 
 Location* Call::Emit(CodeGenerator *cg) {
+    char* id = field->GetName();
+    int n = actuals->NumElements();
+    stack<Location*> *LocStack = new stack<Location*>;
+    for (int i = 0 ; i < n; ++i ) {
+        LocStack->push(actuals->Nth(i)->Emit(cg));
+    }
+    while (!LocStack->empty()) {
+        cg->GenPushParam(LocStack->top());
+        LocStack->pop();
+    }
+    if (base == NULL) {
+        FnDecl *fnDecl = dynamic_cast<FnDecl*>(sTable->find(id)->decl);
+        if (fnDecl == NULL) {
+            printf("Call:Emit error!\n");
+            return NULL;
+        }
+        Location* ret = cg->GenLCall(fnDecl->GetLabel(), fnDecl->HasReturnVal());
+        cg->GenPopParams(n * CodeGenerator::VarSize);
+        return ret;
+    } else {
+        /* for class method */
+    }
     return NULL;
 }
 
