@@ -67,7 +67,7 @@ void GenStore(Location *addr, Location *val, int offset = 0);
 - 将传入的val存储到给定的合法地址所指的位置。
 - 根据输入参数offset使用相对寻址，默认为0。
 
-###GenLoad
+### GenLoad
 
 ```c++
 Location *GenLoad(Location *addr, int offset = 0);
