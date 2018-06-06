@@ -129,7 +129,7 @@ ForStmt::ForStmt(Expr *i, Expr *t, Expr *s, Stmt *b): LoopStmt(t, b) {
 }
 
 void ForStmt::creatStable() {
-    // printf("for fuck!\n");
+    sTable->SetLoopSTable(true);
     init->sTable->AddParent(sTable);
     test->sTable->AddParent(sTable);
     step->sTable->AddParent(sTable);
@@ -138,8 +138,6 @@ void ForStmt::creatStable() {
     init->creatStable();
     test->creatStable();
     body->creatStable();
-
-    sTable->SetLoopSTable(true);
 
     init->check();
     
@@ -181,12 +179,11 @@ int ForStmt::GetMemBytes() {
 }
 
 void WhileStmt::creatStable() {
-    // printf("fuck!\n");
+    sTable->SetLoopSTable(true);
     test->sTable->AddParent(sTable);    
     body->sTable->AddParent(sTable);
     test->creatStable();
     body->creatStable();
-    sTable->SetLoopSTable(true);
     test->check();
     body->check();
 }
@@ -258,7 +255,7 @@ Location* IfStmt::Emit(CodeGenerator * cg) {
 }
 
 int IfStmt::GetMemBytes() {
-    if (elseBody) 
+    if (elseBody == NULL) 
         return test->GetMemBytes() + body->GetMemBytes();
     else 
         return test->GetMemBytes() + body->GetMemBytes() + elseBody->GetMemBytes();
@@ -274,8 +271,8 @@ void CaseStmt::creatStable() {
     label->sTable->AddParent(sTable);
     label->check();
     for (int i = 0 ; i < stmtList->NumElements() ; ++i) {
-        stmtList->Nth(i)->creatStable();
         stmtList->Nth(i)->sTable->AddParent(sTable);
+        stmtList->Nth(i)->creatStable();
         stmtList->Nth(i)->check();
     }
 }
@@ -306,8 +303,8 @@ bool DefaultStmt::check() {
 
 void DefaultStmt::creatStable() {
     for (int i = 0 ; i < stmtList->NumElements() ; ++i) {
-        stmtList->Nth(i)->creatStable();
         stmtList->Nth(i)->sTable->AddParent(sTable);
+        stmtList->Nth(i)->creatStable();
         stmtList->Nth(i)->check();
     }
 }
@@ -336,13 +333,17 @@ SwitchStmt::SwitchStmt(Expr *e, List<CaseStmt*> *caseL,  DefaultStmt *Ds) {
 }
 
 void SwitchStmt::creatStable() {
+    sTable->SetLoopSTable(true);
+    expr->sTable->AddParent(sTable);
+    expr->creatStable();
+    expr->check();
     for (int i = 0 ; i < caseList->NumElements() ; ++i) {
-        caseList->Nth(i)->creatStable();
         caseList->Nth(i)->sTable->AddParent(sTable);
+        caseList->Nth(i)->creatStable();
         caseList->Nth(i)->check();
     }
+    defaultStmt->sTable->AddParent(sTable);    
     defaultStmt->creatStable();
-    defaultStmt->sTable->AddParent(sTable);
     defaultStmt->check();
 }
 
@@ -441,7 +442,8 @@ Location* ReturnStmt::Emit(CodeGenerator * cg) {
 }
 
 int ReturnStmt::GetMemBytes() {
-    return 0;
+    if (expr == NULL) return 0;
+    else return expr->GetMemBytes();
 }
 
 PrintStmt::PrintStmt(List<Expr*> *a) {    

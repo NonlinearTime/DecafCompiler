@@ -40,7 +40,6 @@ void ClassDecl::creatStable(){
         if (!ste) ReportError::IdentifierNotDeclared(extends->id,LookingForClass); //printf("error:%s not define.\n",extends->GetTypeName());
         else {
             int tt = ste->decl->GetDeclType();
-            printf("%s %d\n",ste->decl->GetName(), tt);
             if (tt != classDeclType ) 
                 ReportError::IdentifierNotDeclared(extends->id,LookingForClass);
             else {

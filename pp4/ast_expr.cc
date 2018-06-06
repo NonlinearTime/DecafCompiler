@@ -87,8 +87,9 @@ Type* CompoundExpr::GetResType() {
         if (rType->GetDeclType() != varDeclType) {
             FieldAccess *fA = dynamic_cast<FieldAccess*>(right);
             NamedType* nT = dynamic_cast<NamedType *> (rType);
-            if (fA != NULL) {
-                ReportError::IdentifierNotDeclared(fA->field,LookingForVariable);
+            // printf("fuck!\n");
+            if (nT != NULL) {
+                ReportError::IdentifierNotDeclared(nT->id,LookingForVariable);
                 return Type::errorType;
             }
         }
@@ -124,7 +125,7 @@ Location* ArithmeticExpr::EmitBinary(CodeGenerator *cg) {
     Location* rLoc = right->Emit(cg);
 
     Location* res = cg->GenBinaryOp(op->GetOperation(),lLoc, rLoc);
-    return NULL;
+    return res;
 }
 
 int ArithmeticExpr::GetMemBytesUnary() {
@@ -132,6 +133,7 @@ int ArithmeticExpr::GetMemBytesUnary() {
 }
 
 int ArithmeticExpr::GetMemBytesBinary() {
+    // printf("%d %d\n",left->GetMemBytes(), right->GetMemBytes());
     return left->GetMemBytes() + right->GetMemBytes() + CodeGenerator::VarSize;
 }
 
@@ -182,8 +184,8 @@ int RelationalExpr::GetMemBytes() {
 }
 
 Location* RelationalExpr::EmitLess(CodeGenerator *cg, Expr *l, Expr *r) {
-    Location* lLoc = left->Emit(cg);
-    Location* rLoc = right->Emit(cg);
+    Location* lLoc = l->Emit(cg);
+    Location* rLoc = r->Emit(cg);
     Location* res = cg->GenBinaryOp("<", lLoc, rLoc);
     return res;
 }
@@ -193,8 +195,8 @@ int RelationalExpr::GetMemBytesLess(Expr *l, Expr *r) {
 }
 
 Location* RelationalExpr::EmitLessEqual(CodeGenerator *cg, Expr *l, Expr *r) {
-    Location* lLoc = left->Emit(cg);
-    Location* rLoc = right->Emit(cg);
+    Location* lLoc = l->Emit(cg);
+    Location* rLoc = r->Emit(cg);
 
     Location* less = cg->GenBinaryOp("<", lLoc, rLoc);
     Location* equ = cg->GenBinaryOp("==", lLoc, rLoc);
@@ -431,7 +433,7 @@ void PostfixExpr::creatStable() {
 }
 
 Type* PostfixExpr::GetResType() {
-    Assert(right != NULL);
+    Assert(left != NULL);
     Type *lType = left->GetResType();
     if (lType->isError()) return Type::errorType;
     switch (lType->GetDeclType()) {
@@ -665,6 +667,7 @@ Location* FieldAccess::Emit(CodeGenerator *cg) {
         VarDecl* vDecl = dynamic_cast<VarDecl*> (decl);
         Assert(vDecl != NULL);
         Location *loc = vDecl->GetMemLoc();
+        // printf("fuck %s\n",loc->GetName());
         if (loc) return loc;
         else {}
     } else {

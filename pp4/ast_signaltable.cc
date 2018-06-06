@@ -224,6 +224,8 @@ bool SignalTable::isInClass() {
 }
 
 bool SignalTable::isInLoop() {
+    // printf("%d %d\n",parents->NumElements(), isLoopSymbolTable);
+    
     if (isLoopSTable()) return true;
     for (int i = 0; i < parents->NumElements(); ++i) {
         if (parents->Nth(i)->isInLoop()) return true;
