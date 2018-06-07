@@ -207,6 +207,14 @@ void CodeGenerator::DoFinalCodeGen()
      Mips mips;
      mips.EmitPreamble();
      for (int i = 0; i < code->NumElements(); i++)
-	 code->Nth(i)->Emit(&mips);
+	      code->Nth(i)->Emit(&mips);
   }
+}
+
+void CodeGenerator::GenEndSyscall() {
+  code->Append(new EndSyscall());
+}
+
+void CodeGenerator::GenPrintSyscall(Location * result) {
+  code->Append(new PrintSyscall(result));
 }

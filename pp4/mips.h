@@ -22,6 +22,9 @@
 #include "list.h"
 class Location;
 
+typedef enum {
+    endSyscall, printSyscall
+} SysType;
 
 class Mips {
   private:
@@ -88,6 +91,10 @@ class Mips {
     void EmitVTable(const char *label, List<const char*> *methodLabels);
 
     void EmitPreamble();
+
+    void EmitEndSyscall();
+
+    void EmitPrintSyscall(Location* result);
 };
 
 

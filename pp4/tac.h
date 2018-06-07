@@ -242,5 +242,17 @@ class VTable: public Instruction {
     void EmitSpecific(Mips *mips);
 };
 
+class EndSyscall: public Instruction {
+  public:
+    EndSyscall();
+    void EmitSpecific(Mips *mips);
+};
+
+class PrintSyscall: public Instruction {
+  Location *loc;
+  public:
+    PrintSyscall(Location * result);
+    void EmitSpecific(Mips *mips);
+};
 
 #endif

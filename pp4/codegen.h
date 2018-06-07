@@ -162,6 +162,11 @@ class CodeGenerator {
          // but instead just print the untranslated Tac. It may be
          // useful in debugging to first make sure your Tac is correct.
     void DoFinalCodeGen();
+    
+    //for MIPS CPU implemented by Logisim
+    void GenEndSyscall();
+
+    void GenPrintSyscall(Location *result);
 };
 
 #endif

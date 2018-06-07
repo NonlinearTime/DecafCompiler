@@ -3,27 +3,12 @@ int main() {
 	int j;
 	int m;
 	bool b;
-	i = 0;
-	j = 1;
-	b = i == j;
-    //m = i + j;
-	if (i == 0) return 1;
-	else return 2;	
-	while (j > 0) {
-		i = i + 1;
-		if (i < 0 ) break;
+	i = 1;
+	j = 10;
+	while (j < 0) {
+		i = i * j;
+		j = j--;
 	}
-	for (i = 0 ; i < j ; i  = i + 1) {
-		j = j + 1;
-		break;
-	}
-	switch(i) {
-		case 0: 
-			i++;
-		case 1:
-			i = 2;
-		default:
-			i = 3;
-	}
+	Print(i);
 	return 0;
 }

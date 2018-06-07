@@ -519,6 +519,25 @@ void Mips::EmitPreamble()
   Emit(".globl main");
 }
 
+/*Method: EmitSyscall
+ * ------------------
+ * for MIPS CPU implemented by Logisim, we need to print our result to
+ * digital segments, by syscall ,or to halt our function
+ * if $vo == 10, halt, else print
+*/
+void Mips::EmitEndSyscall() {
+    Emit("# here we quit");
+    Emit("move $v0, 10\t\t# move 10 to $v0");
+    Emit("syscall");
+}
+
+void Mips::EmitPrintSyscall(Location *result) {
+  Register r = GetRegisterForWrite(result);
+  Emit("# here we print %s",result->GetName());
+  Emit("move $a0, %s\t\t# move value to $a0",regs[r].name);
+  Emit("move $v0, 20\t\t# move 20 to $v0");
+  Emit("syscall");
+}
 
 /* Method: NameForTac
  * ------------------

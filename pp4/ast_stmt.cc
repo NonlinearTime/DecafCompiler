@@ -453,6 +453,7 @@ PrintStmt::PrintStmt(List<Expr*> *a) {
 
 void PrintStmt::creatStable() {
     int n = args->NumElements();
+    if (n > 3) ReportError::NumArgsMismatch(new Identifier(*(this->GetLocation()),"Print"),3,n);
     for (int i = 0 ; i < n; ++i) {
         args->Nth(i)->sTable->AddParent(sTable);
         args->Nth(i)->creatStable();
@@ -471,6 +472,10 @@ bool PrintStmt::check() {
 }
 
 Location* PrintStmt::Emit(CodeGenerator * cg) {
+    int n = args->NumElements();
+    if (n != 1) {return NULL;}
+    Location* loc = args->Nth(0)->Emit(cg);
+    cg->GenPrintSyscall(loc);
     return NULL;
 }
 

@@ -235,3 +235,21 @@ void VTable::EmitSpecific(Mips *mips) {
   mips->EmitVTable(label, methodLabels);
 }
 
+EndSyscall::EndSyscall() {
+  sprintf(printed,"%s","quit");
+}
+
+void EndSyscall::EmitSpecific(Mips *mips) {
+  mips->EmitEndSyscall();
+}
+
+PrintSyscall::PrintSyscall(Location* result) {
+  loc = result;
+  sprintf(printed,"print %s",result->GetName());
+}
+
+void PrintSyscall::EmitSpecific(Mips *mips) {
+  mips->EmitPrintSyscall(loc);
+}
+
+

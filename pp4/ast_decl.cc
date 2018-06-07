@@ -161,6 +161,9 @@ Location* FnDecl::Emit(CodeGenerator * cg) {
         body->Emit(cg);
         cg->GenEndFunc();
     }
+    if (*label == "main") {
+        cg->GenEndSyscall();
+    }
     return NULL; 
 }
 
