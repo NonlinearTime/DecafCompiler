@@ -1,3 +1,7 @@
+void f(int i) {
+	Print(i);
+}
+
 int main() {
 	int i;
 	int j;
@@ -5,10 +9,13 @@ int main() {
 	bool b;
 	i = 1;
 	j = 10;
-	while (j < 0) {
+	while (j > 0) {
 		i = i * j;
 		j = j--;
 	}
+	f(i);
 	Print(i);
 	return 0;
 }
+
+

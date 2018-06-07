@@ -192,8 +192,9 @@ class BeginFunc: public Instruction {
 };
 
 class EndFunc: public Instruction {
+    bool isMain;
   public:
-    EndFunc();
+    EndFunc(bool isMain);
     void EmitSpecific(Mips *mips);
 };
 

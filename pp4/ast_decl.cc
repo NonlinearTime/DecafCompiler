@@ -159,11 +159,11 @@ Location* FnDecl::Emit(CodeGenerator * cg) {
         cg->GenLabel(GetLabel());
         cg->GenBeginFunc()->SetFrameSize(body->GetMemBytes());
         body->Emit(cg);
-        cg->GenEndFunc();
+        cg->GenEndFunc(*label == "main");
     }
-    if (*label == "main") {
-        cg->GenEndSyscall();
-    }
+    // if (*label == "main") {
+    //     cg->GenEndSyscall();
+    // }
     return NULL; 
 }
 

@@ -81,7 +81,7 @@ class Mips {
     void EmitReturn(Location *returnVal);
     
     void EmitBeginFunction(int frameSize);
-    void EmitEndFunction();
+    void EmitEndFunction(bool isMain);
 
     void EmitParam(Location *arg);
     void EmitLCall(Location *result, const char* label);

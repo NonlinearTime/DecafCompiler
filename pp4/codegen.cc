@@ -127,9 +127,13 @@ BeginFunc *CodeGenerator::GenBeginFunc()
   return result;
 }
 
-void CodeGenerator::GenEndFunc()
+void CodeGenerator::GenEndFunc(bool isMain)
 {
-  code->Append(new EndFunc());
+  code->Append(new EndFunc(isMain));
+  if (isMain) {
+    GenEndSyscall();
+  }
+  
 }
 
 void CodeGenerator::GenPushParam(Location *param)
@@ -205,7 +209,7 @@ void CodeGenerator::DoFinalCodeGen()
 	code->Nth(i)->Print();
    }  else {
      Mips mips;
-     mips.EmitPreamble();
+     //mips.EmitPreamble();
      for (int i = 0; i < code->NumElements(); i++)
 	      code->Nth(i)->Emit(&mips);
   }

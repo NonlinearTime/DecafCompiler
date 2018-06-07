@@ -146,7 +146,7 @@ class CodeGenerator {
          // These methods generate the Tac instructions that mark the start
          // and end of a function/method definition.
     BeginFunc *GenBeginFunc();
-    void GenEndFunc();
+    void GenEndFunc(bool isMain);
 
          // Generates the Tac instructions for defining vtable for a
          // The methods parameter is expected to contain the vtable

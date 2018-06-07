@@ -51,6 +51,9 @@ void Program::Emit() {
         }
     }
 
+    cg->GenLCall("main",false);
+    cg->GenEndSyscall();
+
     for (int i = 0 ; i < n ; ++i) {
         decls->Nth(i)->PreEmit();
     }
@@ -475,12 +478,17 @@ Location* PrintStmt::Emit(CodeGenerator * cg) {
     int n = args->NumElements();
     if (n != 1) {return NULL;}
     Location* loc = args->Nth(0)->Emit(cg);
-    cg->GenPrintSyscall(loc);
+    Location* res = cg->GenTempVar();
+    cg->GenAssign(res,loc);
+    cg->GenPrintSyscall(res);
     return NULL;
 }
 
 int PrintStmt::GetMemBytes() {
-    return 0;
+    int n = args->NumElements();
+    if (n != 1) {return 0;}
+    return args->Nth(0)->GetMemBytes() + CodeGenerator::VarSize;
+
 }
 
 

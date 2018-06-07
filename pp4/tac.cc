@@ -165,11 +165,12 @@ void BeginFunc::EmitSpecific(Mips *mips) {
   mips->EmitBeginFunction(frameSize);
 }
 
-EndFunc::EndFunc() : Instruction() {
+EndFunc::EndFunc(bool isMain) : Instruction() {
+  this->isMain = isMain;
   sprintf(printed, "EndFunc");
 }
 void EndFunc::EmitSpecific(Mips *mips) {
-  mips->EmitEndFunction();
+  mips->EmitEndFunction(isMain);
 }
 
 

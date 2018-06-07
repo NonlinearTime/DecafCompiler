@@ -454,9 +454,9 @@ Type* PostfixExpr::GetResType() {
 
 Location* PostfixExpr::Emit(CodeGenerator *cg) {
     const char * ops = op->GetOperation();
-    if (strcmp(ops, "++"))
+    if (strcmp(ops, "++") == 0)
         return EmitPlus(cg);
-    else if (strcmp(ops, "--")) 
+    else if (strcmp(ops, "--") == 0) 
         return EmitMinus(cg);
     else Assert(0);
     return NULL;
@@ -464,9 +464,9 @@ Location* PostfixExpr::Emit(CodeGenerator *cg) {
 
 int PostfixExpr::GetMemBytes() {
     const char * ops = op->GetOperation();
-    if (strcmp(ops, "++"))
+    if (strcmp(ops, "++") == 0)
         return GetMemBytesPlus();
-    else if (strcmp(ops, "--")) 
+    else if (strcmp(ops, "--") == 0) 
         return GetMemBytesMinus();
     else Assert(0);
     return 0;

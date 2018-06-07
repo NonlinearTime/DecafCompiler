@@ -480,10 +480,12 @@ void Mips::EmitBeginFunction(int stackFrameSize)
  * case to clean up stack frame, return to caller etc. See comments on
  * EmitReturn above.
  */
-void Mips::EmitEndFunction()
+void Mips::EmitEndFunction(bool isMain)
 { 
-  Emit("# (below handles reaching end of fn body with no explicit return)");
-  EmitReturn(NULL);
+  if (!isMain) {
+    Emit("# (below handles reaching end of fn body with no explicit return)");
+    EmitReturn(NULL);
+  }
 }
 
 
@@ -527,7 +529,7 @@ void Mips::EmitPreamble()
 */
 void Mips::EmitEndSyscall() {
     Emit("# here we quit");
-    Emit("move $v0, 10\t\t# move 10 to $v0");
+    Emit("addi $v0, $zero, 10\t\t# set 10 to $v0");
     Emit("syscall");
 }
 
@@ -535,7 +537,7 @@ void Mips::EmitPrintSyscall(Location *result) {
   Register r = GetRegisterForWrite(result);
   Emit("# here we print %s",result->GetName());
   Emit("move $a0, %s\t\t# move value to $a0",regs[r].name);
-  Emit("move $v0, 20\t\t# move 20 to $v0");
+  Emit("addi $v0, $zero, 34\t\t# set 34 to $v0");
   Emit("syscall");
 }
 
