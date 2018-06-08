@@ -3,3 +3,6 @@
 errors.md
 *_ref
 cs143-*
+*.o
+*.asm
+
