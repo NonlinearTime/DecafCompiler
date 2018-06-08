@@ -1,20 +1,26 @@
-void f(int i) {
-	Print(i);
-}
-
-int main() {
+int factorial(int n) {
 	int i;
 	int j;
-	int m;
-	bool b;
 	i = 1;
-	j = 10;
-	while (j > 0) {
+	j = n;
+	while(j > 0) {
 		i = i * j;
 		j = j--;
 	}
-	f(i);
-	Print(i);
+	return i;
+}
+
+int main() {
+	int sum;
+	int j;
+	sum = 0;
+	j = 10;
+	while (j > 0) {
+		sum = sum + factorial(j);
+		j = j--;
+		Print(sum);
+	}
+	Print(sum);
 	return 0;
 }
 
