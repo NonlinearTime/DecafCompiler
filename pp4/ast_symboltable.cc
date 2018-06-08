@@ -1,20 +1,20 @@
-#include "ast_signaltable.h"
+#include "ast_symboltable.h"
 
 
-SignalTable::SignalTable() {
+SymbolTable::SymbolTable() {
     hashtable = new Hashtable<st_entry *>;
-    parents = new List<SignalTable *>;
+    parents = new List<SymbolTable *>;
     isClassSymbolTable = false;
     isFnSymbolTable = false;
     scopeName = NULL;
     isLoopSymbolTable = false;
     baseClass = NULL;
-    interfaces = new List<SignalTable *>;
+    interfaces = new List<SymbolTable *>;
     toImplement = 0;
     implemented = 0;
 }
 
-bool SignalTable::isBaseType(char *t, int dt) {
+bool SymbolTable::isBaseType(char *t, int dt) {
     if (dt == varDeclType) {
         return strcmp(t, "int") == 0 || strcmp(t, "double") == 0 || strcmp(t, "bool") == 0 || strcmp(t, "string") == 0;
     } else if (dt == fnDeclType) {
@@ -23,14 +23,14 @@ bool SignalTable::isBaseType(char *t, int dt) {
     return true;
 }
 
-st_entry * SignalTable::Lookup(const char * key) {
+st_entry * SymbolTable::Lookup(const char * key) {
     st_entry * ste = NULL;
     ste = LocalLookup(key);
     if (!ste && baseClass != NULL)  ste = baseClass->Lookup(key);
     return ste;
 }
 
-st_entry * SignalTable::LookupInterfaces(const char * key) {
+st_entry * SymbolTable::LookupInterfaces(const char * key) {
     st_entry * ste = NULL;
     int n = interfaces->NumElements();
     for (int i = 0 ; i < n ; ++i) {
@@ -40,22 +40,17 @@ st_entry * SignalTable::LookupInterfaces(const char * key) {
     return ste;
 }
 
-void SignalTable::InsertDecl(Decl *decl) {
-    // printf("%s\n",decl->GetName());
+void SymbolTable::InsertDecl(Decl *decl) {
     if (Lookup(decl->GetName()) == NULL) {
-        // printf("%d\n",decl->GetDeclType());
         switch (decl->GetDeclType()) {
             case varDeclType: {
                 char * tn = decl->GetTypeName();
                 VarDecl *vDecl = dynamic_cast<VarDecl*>(decl);
-                // printf("fuck!\n");
                 NamedType *nT = dynamic_cast<NamedType*>(vDecl->type);
                 ArrayType *aT = dynamic_cast<ArrayType*>(vDecl->type);
                 if (!nT && !aT) {
                     Insert(decl->GetName(), new st_entry(decl->GetName(), decl));
                 } else if (nT != NULL) {
-                    // printf("fuck!\n");
-                    // printf("%s\n",nT->GetTypeName());
                     st_entry *ste = find(nT->GetTypeName());
                     if (ste == NULL)
                         ReportError::IdentifierNotDeclared(nT->id,LookingForType);
@@ -71,7 +66,6 @@ void SignalTable::InsertDecl(Decl *decl) {
                         NamedType *anT = dynamic_cast<NamedType*>(aT->elemType);
                         st_entry *ste = find(aT->elemType->GetTypeName());
                         if (ste == NULL) {
-                            // printf("fuck!\n");
                             ReportError::IdentifierNotDeclared(anT->id,LookingForType);
                         }
                         else if (ste->decl->GetDeclType() == varDeclType ) {
@@ -84,9 +78,7 @@ void SignalTable::InsertDecl(Decl *decl) {
             }
             case fnDeclType: {
                 char * tn = decl->GetTypeName();
-                FnDecl *fDecl = dynamic_cast<FnDecl*>(decl);
-                // NamedType *nT = dynamic_cast<NamedType*>(fDecl->returnType);
-                
+                FnDecl *fDecl = dynamic_cast<FnDecl*>(decl);                
                 if (isBaseType(tn, fnDeclType)) {
                     Insert(decl->GetName(), new st_entry(decl->GetName(), decl));
                 } else {
@@ -107,15 +99,12 @@ void SignalTable::InsertDecl(Decl *decl) {
                             NamedType *anT = dynamic_cast<NamedType*>(aT->elemType);
                             st_entry *ste = find(aT->elemType->GetTypeName());
                             if (ste == NULL) {
-                                // printf("fuck!\n");
                                 ReportError::IdentifierNotDeclared(anT->id,LookingForType);
                             } else if (ste->decl->GetDeclType() == varDeclType) 
                                 ReportError::IdentifierNotDeclared(anT->id,LookingForType);
                             else Insert(decl->GetName(), new st_entry(decl->GetName(), decl));
                         }
                     }
-                    // ReportError::IdentifierNotDeclared(decl->id,LookingForType);
-                    // printf("error: unknown type: %s\n", tn);
                 }
                 st_entry * ste = LookupInterfaces(decl->GetName());
                 if (!ste) Insert(decl->GetName(), new st_entry(decl->GetName(), decl));
@@ -159,19 +148,19 @@ void SignalTable::InsertDecl(Decl *decl) {
     }
 }
 
-void SignalTable::AddParent(SignalTable *p) {
+void SymbolTable::AddParent(SymbolTable *p) {
     parents->Append(p);
 }
 
-void SignalTable::AddBaseClass(SignalTable *b) {
+void SymbolTable::AddBaseClass(SymbolTable *b) {
     baseClass = b;
 }
 
-void SignalTable::AddBaseInterface(SignalTable* i) {
+void SymbolTable::AddBaseInterface(SymbolTable* i) {
     interfaces->Append(i);
 }
 
-bool SignalTable::check(const char * key) {
+bool SymbolTable::check(const char * key) {
     int n = parents->NumElements();
     // printf("%d\n",n);
     if (Lookup(key) != NULL) return true;
@@ -180,7 +169,7 @@ bool SignalTable::check(const char * key) {
     return false;
 }
 
-st_entry * SignalTable::find(const char * key) {
+st_entry * SymbolTable::find(const char * key) {
     int n = parents->NumElements();
     st_entry * ste = NULL;
     for (int i = 0 ; i < n; ++i) {
@@ -193,29 +182,20 @@ st_entry * SignalTable::find(const char * key) {
     return ste;
 }
 
-st_entry * SignalTable::findProtoType(const char * key) {
-    // printf("%p\n",parents);
+st_entry * SymbolTable::findProtoType(const char * key) {
     int n = interfaces->NumElements();
     st_entry * ste = NULL;
     for (int i = 0 ; i < n; ++i) {
-        // printf("fuck! %d\n", n);
         ste = interfaces->Nth(i)->LocalLookup(key);
         if (ste != NULL) {
-            // printf("%s\n",key);
             return ste;
         }
-        // printf("fuck!\n");
         ste = interfaces->Nth(i)->find(key);
-        // printf("%p\n",ste);
-        // printf("fuck!\n");
-        // printf("%s\n",key);
     }
-    // printf("fuck!\n");
-    // printf("%p\n",parents);
     return ste;
 }
 
-bool SignalTable::isInClass() {
+bool SymbolTable::isInClass() {
     if (isClassSTable()) return true;
     for (int i = 0; i < parents->NumElements(); ++i) {
         if (parents->Nth(i)->isInClass()) return true;
@@ -223,9 +203,7 @@ bool SignalTable::isInClass() {
     return false;
 }
 
-bool SignalTable::isInLoop() {
-    // printf("%d %d\n",parents->NumElements(), isLoopSymbolTable);
-    
+bool SymbolTable::isInLoop() {    
     if (isLoopSTable()) return true;
     for (int i = 0; i < parents->NumElements(); ++i) {
         if (parents->Nth(i)->isInLoop()) return true;
@@ -233,7 +211,7 @@ bool SignalTable::isInLoop() {
     return false;
 }
 
-char * SignalTable::GetClassScopeName() {
+char * SymbolTable::GetClassScopeName() {
     char *res = NULL;
     if (isClassSTable()) return scopeName;
     for (int i = 0; i < parents->NumElements(); ++i) {
@@ -242,11 +220,10 @@ char * SignalTable::GetClassScopeName() {
     return res;
 }
 
-char * SignalTable::GetFnScopeName() {
+char * SymbolTable::GetFnScopeName() {
     char *res = NULL;
     if (isFnSTable()) return scopeName;
     for (int i = 0; i < parents->NumElements(); ++i) {
-        // printf("%d\n",i);
         res = parents->Nth(i)->GetFnScopeName();
     }
     return res;

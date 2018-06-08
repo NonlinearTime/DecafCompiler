@@ -170,8 +170,6 @@ class ArithmeticExpr : public CompoundExpr
     void creatStable(); 
     int GetExprType() {return arithmeticExpr;}  
     const char *GetExprName() {return op->GetOperation();}
-    // bool check();
-    // const char *GetResType();
     Location* Emit(CodeGenerator *cg);
     int GetMemBytes();
 
@@ -187,7 +185,6 @@ class RelationalExpr : public CompoundExpr
 {
   public:
     RelationalExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
-    // void creatStable() {}    
     int GetExprType() {return relationalExpr;} 
     const char *GetExprName() {return op->GetOperation();}
     Type * GetResType();
@@ -209,7 +206,6 @@ class EqualityExpr : public CompoundExpr
   public:
     EqualityExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     const char *GetPrintNameForNode() { return "EqualityExpr"; }
-    // void creatStable() {}     
     int GetExprType() {return equalityExpr;}
     const char *GetExprName() {return op->GetOperation();}
     Type* GetResType();
@@ -234,7 +230,6 @@ class LogicalExpr : public CompoundExpr
     int GetExprType() {return logicalExpr;}
     const char *GetExprName() {return op->GetOperation();}
     Type* GetResType();
-    // bool check();
 
     Location* Emit(CodeGenerator *cg);
     int GetMemBytes();
@@ -255,10 +250,8 @@ class AssignExpr : public CompoundExpr
   public:
     AssignExpr(Expr *lhs, Operator *op, Expr *rhs) : CompoundExpr(lhs,op,rhs) {}
     const char *GetPrintNameForNode() { return "AssignExpr"; }
-    // void creatStable() {printf("fuck!\n");}    
     int GetExprType() {return assignExpr;} 
     const char *GetExprName() {return op->GetOperation();}
-    // bool check();
     Type* GetResType();
 
     Location* Emit(CodeGenerator *cg);
@@ -271,7 +264,6 @@ class PostfixExpr : public CompoundExpr
     PostfixExpr(Expr *lhs, Operator *op) : CompoundExpr(lhs,op) {}
     const char *GetPrintNameForNode() { return "PostfixExpr"; }
     void creatStable();  
-    // bool check(); 
     const char *GetExprName() {return op->GetOperation();}
     int GetExprType() {return postfixExpr;}
     Type* GetResType();
@@ -291,7 +283,6 @@ class LValue : public Expr
   public:
     LValue(yyltype loc) : Expr(loc) {}
     virtual void creatStable() = 0 ;   
-    // virtual bool check();
     virtual const char *GetExprName() = 0;
     virtual int GetExprType() {return lValue;}
     virtual Type* GetResType() = 0;

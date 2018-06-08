@@ -8,6 +8,7 @@
         "utility": "cpp",
         "*.tcc": "cpp",
         "unordered_map": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "system_error": "cpp"
     }
 }

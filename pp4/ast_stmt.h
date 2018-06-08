@@ -15,7 +15,7 @@
 
 #include "list.h"
 #include "ast.h"
-#include "ast_signaltable.h"
+#include "ast_symboltable.h"
 #include <stack>
 
 class Decl;
@@ -30,7 +30,7 @@ class Program : public Node
      
   public:
      Program(List<Decl*> *declList);
-     static SignalTable *gStable;
+     static SymbolTable *gStable;
      static stack<const char*> *gBLabels;
      void Check();
      void Emit();
@@ -39,9 +39,9 @@ class Program : public Node
 class Stmt : public Node
 {
   public:
-     Stmt() : Node() {sTable = new SignalTable;}
-     Stmt(yyltype loc) : Node(loc) {sTable = new SignalTable;}
-     SignalTable *sTable;
+     Stmt() : Node() {sTable = new SymbolTable;}
+     Stmt(yyltype loc) : Node(loc) {sTable = new SymbolTable;}
+     SymbolTable *sTable;
 
     virtual void creatStable() = 0;
     virtual bool check() = 0;

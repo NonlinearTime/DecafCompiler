@@ -8,7 +8,7 @@
 #include "ast_expr.h"
 #include "errors.h"
 
-SignalTable *Program::gStable = new SignalTable; 
+SymbolTable *Program::gStable = new SymbolTable; 
 stack<const char*> *Program::gBLabels = new stack<const char *>();
 
 
@@ -51,8 +51,10 @@ void Program::Emit() {
         }
     }
 
-    cg->GenLCall("main",false);
-    cg->GenEndSyscall();
+    if (IsTypeOn("mars")) {
+        cg->GenLCall("main",false);
+        cg->GenEndSyscall();
+    }
 
     for (int i = 0 ; i < n ; ++i) {
         decls->Nth(i)->PreEmit();
@@ -488,7 +490,6 @@ int PrintStmt::GetMemBytes() {
     int n = args->NumElements();
     if (n != 1) {return 0;}
     return args->Nth(0)->GetMemBytes() + CodeGenerator::VarSize;
-
 }
 
 

@@ -49,7 +49,6 @@ class Node  {
     void SetParent(Node *p)  { parent = p; }
     Node *GetParent()        { return parent; }
 
-    // friend class SignalTable;
 };
    
 

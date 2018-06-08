@@ -1,7 +1,9 @@
-	# standard Decaf preamble 
-	  .text
-	  .align 2
-	  .globl main
+	# LCall main
+	  jal main           	# jump to function
+	# quit
+	# here we quit
+	  addi $v0, $zero, 10		# set 10 to $v0
+	  syscall
   __f:
 	# BeginFunc 4
 	  subu $sp, $sp, 8	# decrement sp to make space to save ra, fp
@@ -14,8 +16,8 @@
 	  move $t1, $t0		# copy value
 	# print _tmp0
 	# here we print _tmp0
-	  add $a0, $zero, $t1		# move value to $a0
-	  li $v0, 34		# set 34 to $v0
+	  move $a0, $t1		# move value to $a0
+	  addi $v0, $zero, 34		# set 34 to $v0
 	  syscall
 	# EndFunc
 	# (below handles reaching end of fn body with no explicit return)
@@ -90,8 +92,8 @@
 	  move $t1, $t0		# copy value
 	# print _tmp8
 	# here we print _tmp8
-	  add $a0, $zero, $t1		# move value to $a0
-	  li $v0, 34		# set 34 to $v0
+	  move $a0, $t1		# move value to $a0
+	  addi $v0, $zero, 34		# set 34 to $v0
 	  syscall
 	# _tmp9 = 0
 	  li $t2, 0		# load constant value 0 into $t2
@@ -102,3 +104,7 @@
 	  lw $fp, 0($fp)	# restore saved fp
 	  jr $ra		# return from function
 	# EndFunc
+	# quit
+	# here we quit
+	  addi $v0, $zero, 10		# set 10 to $v0
+	  syscall

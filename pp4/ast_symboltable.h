@@ -1,6 +1,6 @@
-#ifndef _H_ast_signaltable
+#ifndef _H_ast_symbolTable
 
-#define _H_ast_signaltable
+#define _H_ast_symbolTable
 
 #include "list.h"
 #include "hashtable.h"
@@ -53,9 +53,9 @@ class st_entry {
 
 };
 
-class SignalTable {
+class SymbolTable {
     public:
-        SignalTable();
+        SymbolTable();
         void Insert(const char * key, st_entry * entry) {
             hashtable->Enter(key, entry);
         }
@@ -67,9 +67,9 @@ class SignalTable {
         }
         st_entry * Lookup(const char * key);
         st_entry * LookupInterfaces(const char * key);
-        void AddParent(SignalTable * p);
-        void AddBaseClass(SignalTable *b);
-        void AddBaseInterface(SignalTable *i);
+        void AddParent(SymbolTable * p);
+        void AddBaseClass(SymbolTable *b);
+        void AddBaseInterface(SymbolTable *i);
         void InsertDecl(Decl *decl);
         bool HasParent() {return parents->NumElements() != 0;}
         bool check(const char * key);
@@ -91,9 +91,9 @@ class SignalTable {
 
     private:
         Hashtable<st_entry *> *hashtable;
-        List<SignalTable *> *parents;
-        SignalTable *baseClass;
-        List<SignalTable *> *interfaces;
+        List<SymbolTable *> *parents;
+        SymbolTable *baseClass;
+        List<SymbolTable *> *interfaces;
         bool isBaseType(char *t, int dt);
         bool isClassSymbolTable;
         bool isFnSymbolTable;

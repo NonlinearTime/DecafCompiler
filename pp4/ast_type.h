@@ -16,8 +16,6 @@
 #include "list.h"
 #include <iostream>
 #include <cstring>
-// #include "ast_decl.h"
-// #include "ast_signaltable.h"
 using namespace std;
 
 class NamedType;
@@ -44,7 +42,7 @@ class Type : public Node
     virtual void PrintToStream(ostream& out) { out << typeName; }
     friend ostream& operator<<(ostream& out, Type *t) { t->PrintToStream(out); return out; }
     virtual bool IsEquivalentTo(Type *other) { return this == other; }
-    virtual char * GetTypeName() {/* printf("fuck type\n"); */return typeName;}
+    virtual char * GetTypeName() {return typeName;}
     virtual int GetTypeNum() {return TypeNum;}
     bool isConstant() {
       return strcmp(GetTypeName(), "int")    == 0 ||
@@ -69,7 +67,7 @@ class Type : public Node
 
     int GetDeclType() {return declType;}
 
-    friend class SignalTable;
+    friend class SymbolTable;
 };
 
 class NamedType : public Type 
@@ -83,14 +81,13 @@ class NamedType : public Type
     
     void PrintToStream(ostream& out) { out << id; }
 
-    char * GetTypeName() {/* printf("fuck name type\n"); */return id->GetName();}
+    char * GetTypeName() {return id->GetName();}
     virtual int GetTypeNum() {return NameTypeNum;}
     bool EqualsTo(Type* t) {
-        // printf("%d\n",t->GetTypeNum());
         if (GetTypeNum() == t->GetTypeNum()) return strcmp(GetTypeName(),t->GetTypeName()) == 0;
         else return false;
     }
-    friend class SignalTable;
+    friend class SymbolTable;
     friend class NewExpr;
     friend class FnDecl;
     friend class ClassDecl;
@@ -108,7 +105,7 @@ class ArrayType : public Type
 
     void PrintToStream(ostream& out) { out << elemType << "[]"; }
 
-    char * GetTypeName() {/* printf("fuck name type\n"); */
+    char * GetTypeName() {
       return elemType->GetTypeName();
     }
 
@@ -119,7 +116,7 @@ class ArrayType : public Type
         else return false;
     }  
 
-    friend class SignalTable;
+    friend class SymbolTable;
 };
 
  

@@ -130,10 +130,9 @@ BeginFunc *CodeGenerator::GenBeginFunc()
 void CodeGenerator::GenEndFunc(bool isMain)
 {
   code->Append(new EndFunc(isMain));
-  if (isMain) {
+  if (isMain && IsTypeOn("mars")) {
     GenEndSyscall();
   }
-  
 }
 
 void CodeGenerator::GenPushParam(Location *param)
@@ -206,10 +205,10 @@ void CodeGenerator::DoFinalCodeGen()
 
   if (IsDebugOn("tac")) { // if debug don't translate to mips, just print Tac
     for (int i = 0; i < code->NumElements(); i++)
-	code->Nth(i)->Print();
+	    code->Nth(i)->Print();
    }  else {
      Mips mips;
-     //mips.EmitPreamble();
+     if (!IsTypeOn("mars")) mips.EmitPreamble();
      for (int i = 0; i < code->NumElements(); i++)
 	      code->Nth(i)->Emit(&mips);
   }

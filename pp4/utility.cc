@@ -10,7 +10,7 @@
 #include <vector>
 using std::vector;
 
-static vector<const char*> debugKeys;
+static vector<const char*> Keys[10];
 static const int BufferSize = 2048;
 
 void Failure(const char *format, ...) {
@@ -25,24 +25,28 @@ void Failure(const char *format, ...) {
   abort();
 }
 
-int IndexOf(const char *key) {
-  for (unsigned int i = 0; i < debugKeys.size(); i++)
-    if (!strcmp(debugKeys[i], key)) 
+int IndexOf(const char *key, CmdParam cmdparam) {
+  for (unsigned int i = 0; i < Keys[cmdparam].size(); i++)
+    if (!strcmp(Keys[cmdparam][i], key)) 
       return i;
 
   return -1;
 }
 
 bool IsDebugOn(const char *key) {
-  return (IndexOf(key) != -1);
+  return (IndexOf(key, debug) != -1);
 }
 
-void SetDebugForKey(const char *key, bool value) {
-  int k = IndexOf(key);
+bool IsTypeOn(const char *key) {
+  return (IndexOf(key, type) != -1);
+}
+
+void SetKey(const char *key, bool value, CmdParam cmdparam) {
+  int k = IndexOf(key, cmdparam);
   if (!value && k != -1)
-    debugKeys.erase(debugKeys.begin() + k);
+    Keys[cmdparam].erase(Keys[cmdparam].begin() + k);
   else if (value && k == -1)
-    debugKeys.push_back(key);
+    Keys[cmdparam].push_back(key);
 }
 
 void PrintDebug(const char *key, const char *format, ...) {
@@ -62,15 +66,26 @@ void ParseCommandLine(int argc, char *argv[]) {
   if (argc == 1)
     return;
   
-  if (strcmp(argv[1], "-d") != 0) { // first arg is not -d
-    printf("Incorrect Use:   ");
-    for (int i = 1; i < argc; i++) printf("%s ", argv[i]);
-    printf("\n");
-    printf("Correct Usage:   -d <debug-key-1> <debug-key-2> ... \n");
-    exit(2);
-  }
+  CmdParam c;
 
-  for (int i = 2; i < argc; i++)
-    SetDebugForKey(argv[i], true);
+  for (int i = 1; i < argc; ++i) {
+    if (argv[i][0] == '-') {
+        if (strcmp(argv[i], "-d") == 0) {
+          c = debug;
+          continue;
+        }
+        if (strcmp(argv[i], "-t") == 0) {
+          c = type;
+          continue;
+        }
+        printf("Incorrect Use:   ");
+        for (int i = 1; i < argc; i++) printf("%s ", argv[i]);
+        printf("\n");
+        printf("Correct Usage:   -d <tac> ... \n");
+        printf("                 -t <mars> ... \n");
+        exit(2);
+    }
+    SetKey(argv[i],true, c);
+  }
 }
 

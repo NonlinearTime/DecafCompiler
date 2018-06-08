@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+typedef enum {
+  debug, type
+} CmdParam;
+
 /**
  * Function: Failure()
  * Usage: Failure("Out of memory!");
@@ -61,7 +65,7 @@ void PrintDebug(const char *key, const char *format, ...);
  * be called from the provided main for flags passed with -d.
  */
 
-void SetDebugForKey(const char *key, bool val);
+void SetKey(const char *key, bool val, CmdParam cmdparam);
 
 /**
  * Function: IsDebugOn()
@@ -72,6 +76,8 @@ void SetDebugForKey(const char *key, bool val);
  */
 
 bool IsDebugOn(const char *key);
+
+bool IsTypeOn(const char *key);
 
 /**
  * Function: ParseCommandLine

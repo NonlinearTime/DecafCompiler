@@ -11,7 +11,7 @@
 Decl::Decl(Identifier *n) : Node(*n->GetLocation()) {
     Assert(n != NULL);
     (id=n)->SetParent(this); 
-    sTable = new SignalTable;
+    sTable = new SymbolTable;
 }
 
 VarDecl::VarDecl(Identifier *n, Type *t) : Decl(n) {
@@ -161,9 +161,6 @@ Location* FnDecl::Emit(CodeGenerator * cg) {
         body->Emit(cg);
         cg->GenEndFunc(*label == "main");
     }
-    // if (*label == "main") {
-    //     cg->GenEndSyscall();
-    // }
     return NULL; 
 }
 

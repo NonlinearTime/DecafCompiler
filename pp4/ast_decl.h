@@ -16,7 +16,7 @@
 #include "ast.h"
 #include "list.h"
 #include "ast_type.h"
-#include "ast_signaltable.h"
+#include "ast_symboltable.h"
 #include "codegen.h"
 #include <string>
 
@@ -24,14 +24,7 @@ class Type;
 class NamedType;
 class Identifier;
 class Stmt;
-class SignalTable;
-
-/* enum declType {
-    varDeclType = 1, 
-    fnDeclType = 2,
-    interfaceDeclType = 3,
-    classDeclType = 4
-}; */
+class SymbolTable;
 
 #define __varDecl  1
 #define __classDecl  2
@@ -45,7 +38,7 @@ class Decl : public Node
   
   public:
     Decl(Identifier *name);
-    SignalTable *sTable;
+    SymbolTable *sTable;
 
     char * GetName() {return id->GetName();}
 
@@ -62,7 +55,7 @@ class Decl : public Node
 
     virtual int GetMemBytes() = 0;
 
-    friend class SignalTable;
+    friend class SymbolTable;
 };
 
 class VarDecl : public Decl 
@@ -87,7 +80,7 @@ class VarDecl : public Decl
 
     int GetMemBytes();
 
-    friend class SignalTable;
+    friend class SymbolTable;
 };
 
 class ClassDecl : public Decl 
@@ -111,7 +104,7 @@ class ClassDecl : public Decl
     
     int GetMemBytes();
 
-    friend class SignalTable;
+    friend class SymbolTable;
 };
 
 class InterfaceDecl : public Decl 
@@ -132,7 +125,7 @@ class InterfaceDecl : public Decl
 
     int GetMemBytes();
     
-    friend class SignalTable;
+    friend class SymbolTable;
     friend class ClassDecl;
 };
 
@@ -166,7 +159,7 @@ class FnDecl : public Decl
     const char * GetLabel();
     bool HasReturnVal();
 
-    friend class SignalTable;
+    friend class SymbolTable;
 };
 
 #endif

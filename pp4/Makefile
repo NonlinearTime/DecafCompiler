@@ -11,7 +11,7 @@ PRODUCTS = $(COMPILER)
 default: $(PRODUCTS)
 
 # Set up the list of source and object files
-SRCS = ast_signaltable.cc ast.cc ast_decl.cc ast_expr.cc ast_stmt.cc ast_type.cc codegen.cc tac.cc mips.cc errors.cc utility.cc main.cc
+SRCS = ast_symboltable.cc ast.cc ast_decl.cc ast_expr.cc ast_stmt.cc ast_type.cc codegen.cc tac.cc mips.cc errors.cc utility.cc main.cc
 
 # OBJS can deal with either .cc or .c files listed in SRCS
 OBJS = y.tab.o lex.yy.o $(patsubst %.cc, %.o, $(filter %.cc,$(SRCS))) $(patsubst %.c, %.o, $(filter %.c, $(SRCS)))
@@ -243,4 +243,4 @@ main.o: /usr/include/sys/select.h /usr/include/bits/select.h
 main.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
 main.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
 main.o: /usr/include/alloca.h errors.h location.h parser.h scanner.h list.h
-main.o: ast.h ast_type.h ast_decl.h ast_expr.h ast_stmt.h ast_signaltable.h
+main.o: ast.h ast_type.h ast_decl.h ast_expr.h ast_stmt.h ast_symboltable.h

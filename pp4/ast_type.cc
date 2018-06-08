@@ -32,8 +32,6 @@ Type::Type(const char *n) {
 Type::Type(const char *name, int type) {
     Assert(name != NULL);
     typeName = strdup(name);
-    // printf("%s\n",name);
-    // printf("%s\n",typeName);
     declType = type;
 }
 

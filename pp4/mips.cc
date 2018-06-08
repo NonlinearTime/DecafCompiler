@@ -221,8 +221,8 @@ void Mips::Emit(const char *fmt, ...)
 void Mips::EmitLoadConstant(Location *dst, int val)
 {
   Register reg = GetRegisterForWrite(dst);
-  Emit("li %s, %d\t\t# load constant value %d into %s", regs[reg].name,
-	 val, val, regs[reg].name);
+  if (IsTypeOn("mars")) Emit("addi %s, $zero, %d\t\t# load constant value %d into %s", regs[reg].name,val, val, regs[reg].name);
+  else Emit("li %s, %d\t\t# load constant value %d into %s", regs[reg].name,val, val, regs[reg].name);
 }
 
 /* Method: EmitLoadStringConstant
@@ -265,8 +265,8 @@ void Mips::EmitLoadLabel(Location *dst, const char *label)
 void Mips::EmitCopy(Location *dst, Location *src)
 {
   Register rSrc = GetRegister(src), rDst = GetRegisterForWrite(dst, rSrc);
-  Emit("move %s, %s\t\t# copy value", regs[rDst].name, regs[rSrc].name);
-
+  if (IsTypeOn("mars")) Emit("add %s, $zero, %s\t\t# copy value", regs[rDst].name, regs[rSrc].name);
+  else Emit("move %s, %s\t\t# copy value", regs[rDst].name, regs[rSrc].name);
 }
 
 
@@ -345,7 +345,8 @@ void Mips::EmitLabel(const char *label)
 void Mips::EmitGoto(const char *label)
 {
   SpillAllDirtyRegisters(); 
-  Emit("b %s\t\t# unconditional branch", label);
+  if (IsTypeOn("mars")) Emit("j %s\t\t# unconditional branch", label);
+  else Emit("b %s\t\t# unconditional branch", label);
 }
 
 
@@ -397,7 +398,8 @@ void Mips::EmitCallInstr(Location *result, const char *fn, bool isLabel)
   Emit("%s %-15s\t# jump to function", isLabel? "jal": "jalr", fn);
   if (result != NULL) {
     Register r1 = GetRegisterForWrite(result);
-    Emit("move %s, %s\t\t# copy function return value from $v0", regs[r1].name, regs[v0].name);
+    if (IsTypeOn("mars")) Emit("add %s, $zero, %s\t\t# copy function return value from $v0", regs[r1].name, regs[v0].name);
+    else Emit("move %s, %s\t\t# copy function return value from $v0", regs[r1].name, regs[v0].name);
   }
 }
 
@@ -441,11 +443,15 @@ void Mips::EmitPopParams(int bytes)
  */
  void Mips::EmitReturn(Location *returnVal)
 { 
-  if (returnVal != NULL) 
-    Emit("move $v0, %s\t\t# assign return value into $v0",
-	   regs[GetRegister(returnVal)].name);
+  if (returnVal != NULL) {
+    if (IsTypeOn("mars"))
+      Emit("add $v0, $zero, %s\t\t# assign return value into $v0",regs[GetRegister(returnVal)].name);
+    else 
+      Emit("move $v0, %s\t\t# assign return value into $v0",regs[GetRegister(returnVal)].name);
+  }
   SpillForEndFunction();
-  Emit("move $sp, $fp\t\t# pop callee frame off stack");
+  if (IsTypeOn("mars")) Emit("add $sp, $zero, $fp\t\t# pop callee frame off stack");
+  else Emit("move $sp, $fp\t\t# pop callee frame off stack");
   Emit("lw $ra, -4($fp)\t# restore saved ra");
   Emit("lw $fp, 0($fp)\t# restore saved fp");
   Emit("jr $ra\t\t# return from function");
@@ -463,14 +469,16 @@ void Mips::EmitPopParams(int bytes)
 void Mips::EmitBeginFunction(int stackFrameSize)
 {
   Assert(stackFrameSize >= 0);
-  Emit("subu $sp, $sp, 8\t# decrement sp to make space to save ra, fp");
+  if (IsTypeOn("mars")) Emit("sub $sp, $sp, 8\t# decrement sp to make space to save ra, fp");
+  else Emit("subu $sp, $sp, 8\t# decrement sp to make space to save ra, fp");
   Emit("sw $fp, 8($sp)\t# save fp");
   Emit("sw $ra, 4($sp)\t# save ra");
   Emit("addiu $fp, $sp, 8\t# set up new fp");
 
-  if (stackFrameSize != 0)
-    Emit("subu $sp, $sp, %d\t# decrement sp to make space for locals/temps",
-	   stackFrameSize);
+  if (stackFrameSize != 0) {
+    if (IsTypeOn("mars")) Emit("sub $sp, $sp, %d\t# decrement sp to make space for locals/temps",stackFrameSize);
+    else Emit("subu $sp, $sp, %d\t# decrement sp to make space for locals/temps",stackFrameSize);
+  }
 }
 
 
@@ -482,7 +490,7 @@ void Mips::EmitBeginFunction(int stackFrameSize)
  */
 void Mips::EmitEndFunction(bool isMain)
 { 
-  if (!isMain) {
+  if (!isMain ) {
     Emit("# (below handles reaching end of fn body with no explicit return)");
     EmitReturn(NULL);
   }
@@ -529,15 +537,17 @@ void Mips::EmitPreamble()
 */
 void Mips::EmitEndSyscall() {
     Emit("# here we quit");
-    Emit("addi $v0, $zero, 10\t\t# set 10 to $v0");
+    if (IsTypeOn("mars")) Emit("addi $v0, $zero, 10\t\t# set 10 to $v0");
+    else Emit("li $v0, 10\t\t# set 10 to $v0");
     Emit("syscall");
 }
 
 void Mips::EmitPrintSyscall(Location *result) {
   Register r = GetRegisterForWrite(result);
   Emit("# here we print %s",result->GetName());
-  Emit("move $a0, %s\t\t# move value to $a0",regs[r].name);
-  Emit("addi $v0, $zero, 34\t\t# set 34 to $v0");
+  Emit("add $a0, $zero, %s\t\t# move value to $a0",regs[r].name);
+  if (IsTypeOn("mars")) Emit("addi $v0, $zero, 34\t\t# set 34 to $v0");
+  else  Emit("li $v0, 34\t\t# set 34 to $v0");
   Emit("syscall");
 }
 
