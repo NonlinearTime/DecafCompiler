@@ -167,6 +167,8 @@ class CodeGenerator {
     void GenEndSyscall();
 
     void GenPrintSyscall(Location *result);
+
+    Location* GenReadInteger();
 };
 
 #endif

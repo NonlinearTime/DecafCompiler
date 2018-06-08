@@ -497,7 +497,6 @@ void Mips::EmitEndFunction(bool isMain)
 }
 
 
-
 /* Method: EmitVTable
  * ------------------
  * Used to layout a vtable. Uses assembly directives to set up new
@@ -538,7 +537,7 @@ void Mips::EmitPreamble()
 void Mips::EmitEndSyscall() {
     Emit("# here we quit");
     if (IsTypeOn("mars")) Emit("addi $v0, $zero, 10\t\t# set 10 to $v0");
-    else Emit("li $v0, 10\t\t# set 10 to $v0");
+      else Emit("li $v0, 10\t\t# set 10 to $v0");
     Emit("syscall");
 }
 
@@ -549,6 +548,24 @@ void Mips::EmitPrintSyscall(Location *result) {
   if (IsTypeOn("mars")) Emit("addi $v0, $zero, 34\t\t# set 34 to $v0");
   else  Emit("li $v0, 34\t\t# set 34 to $v0");
   Emit("syscall");
+}
+
+
+void Mips::EmitReadInteger(Location* result) {
+  Emit("# here we read an integer");
+  // pasue to wait input
+  if (IsTypeOn("mars")) Emit("addi $v0, $zero, 10\t\t# set 10 to $v0");
+      else Emit("li $v0, 10\t\t# set 10 to $v0");
+  Emit("syscall");
+  
+  //read input
+  if (IsTypeOn("mars")) Emit("addi $v0, $zero, 50\t\t# set 50 to $v0");
+    else Emit("li $v0, 50\t\t# set 50 to $v0");
+  Emit("syscall");
+
+  Register r = GetRegisterForWrite(result);
+  Emit("add %s, $zero, $v0\t\t# load input to %s",regs[r].name,regs[r].name);
+
 }
 
 /* Method: NameForTac

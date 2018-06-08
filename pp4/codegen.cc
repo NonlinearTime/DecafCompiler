@@ -221,3 +221,9 @@ void CodeGenerator::GenEndSyscall() {
 void CodeGenerator::GenPrintSyscall(Location * result) {
   code->Append(new PrintSyscall(result));
 }
+
+Location* CodeGenerator::GenReadInteger() {
+  Location* tloc = GenTempVar();
+  code->Append(new ReadInt(tloc));
+  return tloc;
+}

@@ -256,4 +256,11 @@ class PrintSyscall: public Instruction {
     void EmitSpecific(Mips *mips);
 };
 
+class ReadInt: public Instruction {
+  Location* loc;
+  public:
+    ReadInt(Location* result);
+    void EmitSpecific(Mips *mips);
+};
+
 #endif

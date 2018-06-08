@@ -253,4 +253,12 @@ void PrintSyscall::EmitSpecific(Mips *mips) {
   mips->EmitPrintSyscall(loc);
 }
 
+ReadInt::ReadInt(Location* result) {
+  loc = result;
+  sprintf(printed,"%s = ReadInteger()", loc->GetName());
+}
+void ReadInt::EmitSpecific(Mips *mips) {
+  mips->EmitReadInteger(loc);
+}
+
 

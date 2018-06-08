@@ -1008,11 +1008,11 @@ int NewArrayExpr::GetMemBytesRuntimeSizeCheck() {
 }
 
 Location* ReadIntegerExpr::Emit(CodeGenerator *cg) {
-    return 0;
+    return cg->GenReadInteger();
 }
 
 int ReadIntegerExpr::GetMemBytes() {
-    return 0;
+    return CodeGenerator::VarSize;
 }
 
 Type* ReadIntegerExpr::GetResType() {
@@ -1020,6 +1020,7 @@ Type* ReadIntegerExpr::GetResType() {
 }
 
 Location* ReadLineExpr::Emit(CodeGenerator *cg) {
+    
     return NULL;
 }
 

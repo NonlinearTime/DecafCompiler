@@ -14,7 +14,7 @@ int main() {
 	int sum;
 	int j;
 	sum = 0;
-	j = 10;
+	j = ReadInteger();
 	while (j > 0) {
 		sum = sum + factorial(j);
 		j = j--;

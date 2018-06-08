@@ -95,6 +95,8 @@ class Mips {
     void EmitEndSyscall();
 
     void EmitPrintSyscall(Location* result);
+
+    void EmitReadInteger(Location* result);
 };
 
 
